@@ -145,6 +145,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   FlutterBlue flutterBlue = FlutterBlue.instance;
   bool isSwitched = false;
+  bool _trackingenabled = false;
   //final value = "XPTOXXSFXBAC"
   //    .replaceAllMapped(RegExp(r".{4}"), (match) => "${match.group(0)} ");
   static const UUID = '7a3973415133734f78564c757957734f'; //'62bdc0ef-7bd3-41eb-9923-59ea8b1241d3';
@@ -224,10 +225,28 @@ class _MyHomePageState extends State<MyHomePage> {
                 padding: EdgeInsets.all(8.0),
                 splashColor: Colors.blueAccent,
                 onPressed: () {
-                  beaconBroadcast.stop();
+                  //=> _toggleAdvertise(),
+                  beaconBroadcast.setUUID(UUID).setMajorId(MAJOR_ID).setMinorId(MINOR_ID).setTransmissionPower(TRANSMISSION_POWER).setIdentifier('Unique').setLayout(LAYOUT).setManufacturerId(MANUFACTURER_ID);
+                  beaconBroadcast.start(); //.timeout(Duration(milliseconds: 3)){};
+                  flutterBlue.startScan(timeout: Duration(seconds: 4), allowDuplicates: false, scanMode: ScanMode.lowLatency
+                      //withServices: []
+                      );
+
+                  flutterBlue.scanResults.listen((results) {
+                    // do something with scan results
+                    for (ScanResult r in results) {
+                      if (r.advertisementData.manufacturerData.containsKey(6)) {
+                        //5636)) {
+                        print('${r.device} found! rssi: ${r.rssi},${r.device.name},adv_data: ${r.advertisementData},');
+                        print(beaconBroadcast.checkTransmissionSupported());
+                      }
+                    }
+                  });
+
+                  //beaconBroadcast.stop();
                 },
                 child: Text(
-                  "Scan Advertisements",
+                  "Broadcast Advertisements",
                   style: TextStyle(fontSize: 20.0),
                 ),
               ),
@@ -245,32 +264,19 @@ class _MyHomePageState extends State<MyHomePage> {
                 padding: EdgeInsets.all(8.0),
                 splashColor: Colors.blueAccent,
                 onPressed: () {
-                  //=> _toggleAdvertise(),
-                  beaconBroadcast.setUUID(UUID).setMajorId(MAJOR_ID).setMinorId(MINOR_ID).setTransmissionPower(TRANSMISSION_POWER).setIdentifier('Unique').setLayout(LAYOUT).setManufacturerId(MANUFACTURER_ID).start();
-                  //.timeout(Duration(milliseconds: 3))
-                  flutterBlue.startScan(timeout: Duration(seconds: 4), allowDuplicates: false, scanMode: ScanMode.lowLatency
-                      //withServices: []
-                      );
-
-                  flutterBlue.scanResults.listen((results) {
-                    // do something with scan results
-                    for (ScanResult r in results) {
-                      if (r.advertisementData.manufacturerData.containsKey(6)) {
-                        //5636)) {
-                        print('${r.device} found! rssi: ${r.rssi},${r.device.name},adv_data: ${r.advertisementData},');
-                        print(beaconBroadcast.checkTransmissionSupported());
-                      }
-                    }
-                  });
                   flutterBlue.stopScan();
-                  //beaconBroadcast.stop();
+                  beaconBroadcast.stop();
                 },
                 child: Text(
-                  "Broadcast Advertisements",
+                  "Scan Advertisements",
                   style: TextStyle(fontSize: 20.0),
                 ),
               ),
             ),
+            Switch(
+              value: _trackingenabled,
+              onChanged: (bool value) {},
+            )
           ],
         ),
       ),
