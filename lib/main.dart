@@ -37,7 +37,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   FlutterBlue flutterBlue = FlutterBlue.instance;
   bool isSwitched = false;
-  bool alertbox_status = false;
+  bool alertboxStatus = false;
   Timer scanInv;
   String blueOnOffStr = 'Start Scanning';
 
@@ -98,9 +98,13 @@ class _MyHomePageState extends State<MyHomePage> {
         payload: 'item x');
   }
 
+  // void _showNotif() async {
+  //   await notificationFunc();
+  // }
+
   Future<void> popup() async {
-    if (alertbox_status == false) {
-      alertbox_status = true;
+    if (alertboxStatus == false) {
+      alertboxStatus = true;
       showDialog(
         //User friendly error message when the screen has been displayed
         context: context,
@@ -124,13 +128,9 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
         ),
         barrierDismissible: true,
-      ).then((_) => {alertbox_status = false});
+      ).then((_) => {alertboxStatus = false});
     }
     Vibration.vibrate(pattern: [500, 1000, 500, 2000]);
-  }
-
-  void _showNotif() async {
-    await notificationFunc();
   }
 
   void stopText() {
@@ -184,11 +184,10 @@ class _MyHomePageState extends State<MyHomePage> {
                         Duration(seconds: 5),
                         (Timer t) => {
                               flutterBlue.startScan(
-                                  timeout: Duration(seconds: 4),
-                                  allowDuplicates: false,
-                                  scanMode: ScanMode.lowLatency
-                                  //withServices: []
-                                  ),
+                                timeout: Duration(seconds: 4),
+                                allowDuplicates: false,
+                                scanMode: ScanMode.lowLatency,
+                              ),
                               flutterBlue.scanResults.listen((results) async {
                                 // do something with scan results
                                 for (ScanResult r in results) {
@@ -197,14 +196,17 @@ class _MyHomePageState extends State<MyHomePage> {
                                       .containsKey(myUniqueKey)) {
                                     var scanUuid = hex.encode(r
                                         .advertisementData
-                                        .manufacturerData[myUniqueKey]);
+                                        .manufacturerData
+                                        .values
+                                        .toList()[0]
+                                        .sublist(2, 18));
                                     if (scanUuid == UUID) {
                                       await popup();
-                                      alertbox_status = true;
-                                      print('uuid: $scanUuid');
+                                      alertboxStatus = true;
+                                      //print('uuid: $scanUuid');
                                     }
                                     // print(
-                                    //     '${r.device} found! rssi: ${r.rssi},${r.device.name},adv_data: ${r.advertisementData},');
+                                    //     '${r.device} found! rssi: ${r.rssi},key: ${r.advertisementData.manufacturerData.keys},adv_data: ${r.advertisementData.manufacturerData.values.toList()[0]},');
                                   }
                                 }
                               }).onDone(() {
@@ -212,8 +214,8 @@ class _MyHomePageState extends State<MyHomePage> {
                               }),
                             });
                   } else {
-                    print(
-                        'Off_Status: ${await beaconBroadcast.isAdvertising()},${scanInv.isActive},$isSwitched');
+                    // print(
+                    //     'Off_Status: ${await beaconBroadcast.isAdvertising()},${scanInv.isActive},$isSwitched');
                     if (await beaconBroadcast.isAdvertising()) {
                       beaconBroadcast.stop();
                     }
@@ -221,7 +223,6 @@ class _MyHomePageState extends State<MyHomePage> {
                       scanInv.cancel();
                     }
                     strtText();
-
                     return null;
                   }
                 },
