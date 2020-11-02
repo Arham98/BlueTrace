@@ -314,13 +314,13 @@
       "languageVersion": "2.7"
     },
     {
-      "name": "flutter_app",
+      "name": "blue_trace",
       "rootUri": "../",
       "packageUri": "lib/",
       "languageVersion": "2.7"
     }
   ],
-  "generated": "2020-11-02T04:52:29.352016Z",
+  "generated": "2020-11-02T05:37:20.020720Z",
   "generator": "pub",
   "generatorVersion": "2.11.0-213.1.beta"
 }
