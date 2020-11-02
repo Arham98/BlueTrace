@@ -33,7 +33,9 @@ dependencies:
   flutter_ble_peripheral: ^0.2.0
   firebase_core: ^0.5.1
   firebase_auth: ^0.18.2
-  background_fetch: ^0.5.1
+  flutter_local_notifications: ^3.0.1+2
+  permission_handler: ^5.0.1+1
+  vibration: ^1.7.1
 
 dev_dependencies:
 

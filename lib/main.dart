@@ -1,126 +1,18 @@
-//import 'dart:async';
+import 'dart:async';
 //import 'dart:math';
-
+import 'package:convert/convert.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue/flutter_blue.dart';
 import 'package:beacon_broadcast/beacon_broadcast.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter_ble_peripheral/data.dart';
-import 'package:flutter_ble_peripheral/main.dart';
-import 'package:flutter/services.dart';
-import 'package:background_fetch/background_fetch.dart';
-
-void backgroundFetchHeadlessTask(String taskId) async {
-  print('[BackgroundFetch] Headless event received.');
-  BackgroundFetch.finish(taskId);
-}
+import 'package:vibration/vibration.dart';
+//import 'package:permission_handler/permission_handler.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 void main() {
-  runApp(MyApp2());
-  BackgroundFetch.registerHeadlessTask(backgroundFetchHeadlessTask);
+  runApp(MyApp());
 }
 
-class MyApp extends StatefulWidget {
-  @override
-  _MyAppState createState() => new _MyAppState();
-}
-
-class _MyAppState extends State<MyApp> {
-  bool _enabled = true;
-  int _status = 0;
-  List<DateTime> _events = [];
-
-  //void
-  @override
-  void initState() {
-    super.initState();
-    initPlatformState();
-  }
-
-  // Platform messages are asynchronous, so we initialize in an async method.
-  Future<void> initPlatformState() async {
-    // Configure BackgroundFetch.
-    BackgroundFetch.configure(BackgroundFetchConfig(minimumFetchInterval: 15, stopOnTerminate: false, enableHeadless: true, requiresBatteryNotLow: false, requiresCharging: false, requiresStorageNotLow: false, requiresDeviceIdle: false, requiredNetworkType: NetworkType.NONE), (String taskId) async {
-      // This is the fetch-event callback.
-      print("[BackgroundFetch] Event received $taskId");
-      setState(() {
-        _events.insert(0, new DateTime.now());
-      });
-      // IMPORTANT:  You must signal completion of your task or the OS can punish your app
-      // for taking too long in the background.
-      BackgroundFetch.finish(taskId);
-    }).then((int status) {
-      print('[BackgroundFetch] configure success: $status');
-      setState(() {
-        _status = status;
-      });
-    }).catchError((e) {
-      print('[BackgroundFetch] configure ERROR: $e');
-      setState(() {
-        _status = e;
-      });
-    });
-
-    // Optionally query the current BackgroundFetch status.
-    int status = await BackgroundFetch.status;
-    setState(() {
-      _status = status;
-    });
-
-    // If the widget was removed from the tree while the asynchronous platform
-    // message was in flight, we want to discard the reply rather than calling
-    // setState to update our non-existent appearance.
-    if (!mounted) return;
-  }
-
-  void _onClickEnable(enabled) {
-    setState(() {
-      _enabled = enabled;
-    });
-    if (enabled) {
-      BackgroundFetch.start().then((int status) {
-        print('[BackgroundFetch] start success: $status');
-      }).catchError((e) {
-        print('[BackgroundFetch] start FAILURE: $e');
-      });
-    } else {
-      BackgroundFetch.stop().then((int status) {
-        print('[BackgroundFetch] stop success: $status');
-      });
-    }
-  }
-
-  void _onClickStatus() async {
-    int status = await BackgroundFetch.status;
-    print('[BackgroundFetch] status: $status');
-    setState(() {
-      _status = status;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return new MaterialApp(
-      home: new Scaffold(
-        appBar: new AppBar(title: const Text('BackgroundFetch Example', style: TextStyle(color: Colors.black)), backgroundColor: Colors.amberAccent, brightness: Brightness.light, actions: <Widget>[
-          Switch(value: _enabled, onChanged: _onClickEnable),
-        ]),
-        body: Container(
-          color: Colors.black,
-          child: new ListView.builder(
-              itemCount: _events.length,
-              itemBuilder: (BuildContext context, int index) {
-                DateTime timestamp = _events[index];
-                return InputDecorator(decoration: InputDecoration(contentPadding: EdgeInsets.only(left: 10.0, top: 10.0, bottom: 0.0), labelStyle: TextStyle(color: Colors.amberAccent, fontSize: 20.0), labelText: "[background fetch event]"), child: new Text(timestamp.toString(), style: TextStyle(color: Colors.white, fontSize: 16.0)));
-              }),
-        ),
-        bottomNavigationBar: BottomAppBar(child: Row(children: <Widget>[RaisedButton(onPressed: _onClickStatus, child: Text('Status')), Container(child: Text("$_status"), margin: EdgeInsets.only(left: 20.0))])),
-      ),
-    );
-  }
-}
-
-class MyApp2 extends StatelessWidget {
+class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
@@ -145,70 +37,119 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   FlutterBlue flutterBlue = FlutterBlue.instance;
   bool isSwitched = false;
-  bool _trackingenabled = false;
-  //final value = "XPTOXXSFXBAC"
-  //    .replaceAllMapped(RegExp(r".{4}"), (match) => "${match.group(0)} ");
-  static const UUID = '7a3973415133734f78564c757957734f'; //'62bdc0ef-7bd3-41eb-9923-59ea8b1241d3';
+  bool alertbox_status = false;
+  Timer scanInv;
+  String blueOnOffStr = 'Start Scanning';
+
+  FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
+  var androidInitializationSettings;
+  //var initializationSettings;
+
+  static const UUID =
+      '7a3973415133734f78564c757957734f'; //'62bdc0ef-7bd3-41eb-9923-59ea8b1241d3';
   static const MAJOR_ID = 1;
   static const MINOR_ID = 1;
   static const TRANSMISSION_POWER = 3;
-  static const LAYOUT = 'm:2-3=beac,i:4-19,i:20-21,i:22-23,p:24-24,d:25-25'; //BeaconBroadcast.ALTBEACON_LAYOUT;
+  static const LAYOUT =
+      'm:2-3=beac,i:4-19,i:20-21,i:22-23,p:24-24,d:25-25'; //BeaconBroadcast.ALTBEACON_LAYOUT;
 
   static const MANUFACTURER_ID = 0x1604; //0x1604
   BeaconBroadcast beaconBroadcast = BeaconBroadcast();
-  BeaconStatus _isTransmissionSupported;
-  //bool _isAdvertising = false;
-
-  // FlutterBlePeripheral blePeripheral = FlutterBlePeripheral();
-  // AdvertiseData _data = AdvertiseData();
-  // bool _isBroadcasting = false;
-
+  //BeaconStatus _isTransmissionSupported;
   @override
   void initState() {
     super.initState();
-    beaconBroadcast.checkTransmissionSupported().then((isTransmissionSupported) {
+    beaconBroadcast
+        .checkTransmissionSupported()
+        .then((isTransmissionSupported) {
       setState(() {
-        _isTransmissionSupported = isTransmissionSupported;
+        //_isTransmissionSupported = isTransmissionSupported;
       });
     });
-    // setState(() {
-    //   _data.includeDeviceName = false;
-    //   _data.uuid = 'bf27730d-860a-4e09-889c-2d8b6a9e0fe7';
-    //   _data.manufacturerId = 1234;
-    //   _data.manufacturerData = [1, 2, 3, 4, 5, 6];
-    //   _data.transmissionPowerIncluded = true;
-    // });
-    // initPlatformState();
+    androidInitializationSettings =
+        new AndroidInitializationSettings('mipmap/ic_launcher');
   }
 
-  // Future<void> initPlatformState() async {
-  //   bool isAdvertising = await blePeripheral.isAdvertising();
-  //   setState(() {
-  //     _isBroadcasting = isAdvertising;
-  //   });
+  // Future selectNotification(String payload) async {
+  //   if (payload != null) {
+  //     debugPrint('notification payload: $payload');
+  //   }
+  //   await Navigator.push(
+  //     context,
+  //     MaterialPageRoute<void>(builder: (context) => SecondScreen(payload)),
+  //   );
   // }
 
-  // void _toggleAdvertise() async {
-  //   if (false) {
-  //     //await blePeripheral.isAdvertising()) {
-  //     blePeripheral.stop();
-  //     setState(() {
-  //       _isBroadcasting = false;
-  //     });
-  //   } else {
-  //     blePeripheral.start(_data);
-  //     setState(() {
-  //       _isBroadcasting = true;
-  //     });
-  //   }
-  // }
+  Future<void> notificationFunc() async {
+    AndroidNotificationDetails androidPlatformChannelSpecifics =
+        AndroidNotificationDetails(
+            'your channel id', 'your channel name', 'your channel description',
+            importance: Importance.max,
+            priority: Priority.high,
+            showWhen: false);
+    NotificationDetails platformChannelSpecifics =
+        NotificationDetails(android: androidPlatformChannelSpecifics);
+    await flutterLocalNotificationsPlugin.show(
+        0,
+        'Close Contact',
+        'You are within less than 2 metres near someone, please maintain social distancing.',
+        platformChannelSpecifics,
+        payload: 'item x');
+  }
+
+  Future<void> popup() async {
+    if (alertbox_status == false) {
+      alertbox_status = true;
+      showDialog(
+        //User friendly error message when the screen has been displayed
+        context: context,
+        builder: (_) => AlertDialog(
+          title: Text(
+            "Close Contact Alert",
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 28),
+          ),
+          content: SingleChildScrollView(
+            scrollDirection: Axis.vertical,
+            child: ListBody(
+              mainAxis: Axis.vertical,
+              children: <Widget>[
+                Icon(Icons.warning_amber_rounded,
+                    color: Colors.red[300], size: 50),
+                Text(
+                    'Warning: Social Distance Violated!\nYou are at a distance of less than 2 metres from another person.'),
+              ],
+            ),
+          ),
+        ),
+        barrierDismissible: true,
+      ).then((_) => {alertbox_status = false});
+    }
+    Vibration.vibrate(pattern: [500, 1000, 500, 2000]);
+  }
+
+  void _showNotif() async {
+    await notificationFunc();
+  }
+
+  void stopText() {
+    setState(() {
+      blueOnOffStr = 'Stop Scanning';
+    });
+  }
+
+  void strtText() {
+    setState(() {
+      blueOnOffStr = 'Start Scanning';
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        title: Text("Bluetooth App"),
+        title: Text("Bluetooth Tracing App"),
       ),
       body: Center(
         child: new ListView(
@@ -224,29 +165,68 @@ class _MyHomePageState extends State<MyHomePage> {
                 disabledTextColor: Colors.black,
                 padding: EdgeInsets.all(8.0),
                 splashColor: Colors.blueAccent,
-                onPressed: () {
-                  //=> _toggleAdvertise(),
-                  beaconBroadcast.setUUID(UUID).setMajorId(MAJOR_ID).setMinorId(MINOR_ID).setTransmissionPower(TRANSMISSION_POWER).setIdentifier('Unique').setLayout(LAYOUT).setManufacturerId(MANUFACTURER_ID);
-                  beaconBroadcast.start(); //.timeout(Duration(milliseconds: 3)){};
-                  flutterBlue.startScan(timeout: Duration(seconds: 4), allowDuplicates: false, scanMode: ScanMode.lowLatency
-                      //withServices: []
-                      );
+                onPressed: () async {
+                  isSwitched = !isSwitched;
+                  if (isSwitched) {
+                    stopText();
+                    beaconBroadcast
+                        .setUUID(UUID)
+                        .setMajorId(MAJOR_ID)
+                        .setMinorId(MINOR_ID)
+                        .setTransmissionPower(TRANSMISSION_POWER)
+                        .setIdentifier('Unique')
+                        .setLayout(LAYOUT)
+                        .setManufacturerId(MANUFACTURER_ID);
+                    beaconBroadcast
+                        .start(); //.timeout(Duration(milliseconds: 3)){};
 
-                  flutterBlue.scanResults.listen((results) {
-                    // do something with scan results
-                    for (ScanResult r in results) {
-                      if (r.advertisementData.manufacturerData.containsKey(6)) {
-                        //5636)) {
-                        print('${r.device} found! rssi: ${r.rssi},${r.device.name},adv_data: ${r.advertisementData},');
-                        print(beaconBroadcast.checkTransmissionSupported());
-                      }
+                    scanInv = new Timer.periodic(
+                        Duration(milliseconds: 4200),
+                        (Timer t) => {
+                              flutterBlue.startScan(
+                                  timeout: Duration(seconds: 4),
+                                  allowDuplicates: false,
+                                  scanMode: ScanMode.lowLatency
+                                  //withServices: []
+                                  ),
+                              flutterBlue.scanResults.listen((results) async {
+                                // do something with scan results
+                                for (ScanResult r in results) {
+                                  int myUniqueKey = 5636; //5636;
+                                  if (r.advertisementData.manufacturerData
+                                      .containsKey(myUniqueKey)) {
+                                    var scanUuid = hex.encode(r
+                                        .advertisementData
+                                        .manufacturerData[myUniqueKey]);
+                                    if (scanUuid == UUID) {
+                                      await popup();
+                                      alertbox_status = true;
+                                      print('uuid: $scanUuid');
+                                    }
+                                    // print(
+                                    //     '${r.device} found! rssi: ${r.rssi},${r.device.name},adv_data: ${r.advertisementData},');
+                                  }
+                                }
+                              }).onDone(() {
+                                flutterBlue.stopScan();
+                              }),
+                            });
+                  } else {
+                    print(
+                        'Off_Status: ${await beaconBroadcast.isAdvertising()},${scanInv.isActive},$isSwitched');
+                    if (await beaconBroadcast.isAdvertising()) {
+                      beaconBroadcast.stop();
                     }
-                  });
+                    if (scanInv.isActive) {
+                      scanInv.cancel();
+                    }
+                    strtText();
 
-                  //beaconBroadcast.stop();
+                    return null;
+                  }
                 },
                 child: Text(
-                  "Broadcast Advertisements",
+                  '$blueOnOffStr',
                   style: TextStyle(fontSize: 20.0),
                 ),
               ),
@@ -254,36 +234,17 @@ class _MyHomePageState extends State<MyHomePage> {
             Padding(
               padding: EdgeInsets.all(16.0),
             ),
-            Center(
-              child: FlatButton(
-                minWidth: 0.9 * MediaQuery.of(context).size.width,
-                color: Colors.blue,
-                textColor: Colors.white,
-                disabledColor: Colors.grey,
-                disabledTextColor: Colors.black,
-                padding: EdgeInsets.all(8.0),
-                splashColor: Colors.blueAccent,
-                onPressed: () {
-                  flutterBlue.stopScan();
-                  beaconBroadcast.stop();
-                },
-                child: Text(
-                  "Scan Advertisements",
-                  style: TextStyle(fontSize: 20.0),
-                ),
-              ),
-            ),
-            Switch(
-              value: _trackingenabled,
-              onChanged: (bool value) {},
-            )
           ],
         ),
       ),
       // floatingActionButton: FloatingActionButton(
-      //   //onPressed:
-      //   tooltip: 'Increment',
-      //   child: Icon(Icons.add),
+      //   onPressed: () async {
+      //     popup();
+      //     //_showNotif();
+      //     // Add your onPressed code here!
+      //   },
+      //   child: Icon(Icons.notification_important),
+      //   backgroundColor: Colors.green,
       // ),
     );
   }
