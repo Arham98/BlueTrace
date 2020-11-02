@@ -17,7 +17,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Blue Trace',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
@@ -181,7 +181,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         .start(); //.timeout(Duration(milliseconds: 3)){};
 
                     scanInv = new Timer.periodic(
-                        Duration(milliseconds: 4200),
+                        Duration(seconds: 5),
                         (Timer t) => {
                               flutterBlue.startScan(
                                   timeout: Duration(seconds: 4),
