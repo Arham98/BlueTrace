@@ -1,12 +1,12 @@
 import 'dart:async';
-//import 'dart:math';
 import 'package:convert/convert.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue/flutter_blue.dart';
 import 'package:beacon_broadcast/beacon_broadcast.dart';
 import 'package:vibration/vibration.dart';
-//import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:blue_trace/Scanner.dart';
+import 'package:blue_trace/login.dart';
 
 void main() {
   runApp(MyApp());
@@ -21,7 +21,9 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: MyHomePage(title: 'Flutter Demo Home Page'),
+      home: ScanPage(
+        title: "Bluetooth Tracing",
+      ),
     );
   }
 }
