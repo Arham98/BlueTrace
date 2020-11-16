@@ -1,12 +1,12 @@
 import 'dart:async';
-//import 'dart:math';
 import 'package:convert/convert.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue/flutter_blue.dart';
 import 'package:beacon_broadcast/beacon_broadcast.dart';
 import 'package:vibration/vibration.dart';
-//import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:blue_trace/Scanner.dart';
+import 'package:blue_trace/login.dart';
 
 void main() {
   runApp(MyApp());
@@ -21,7 +21,9 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: MyHomePage(title: 'Flutter Demo Home Page'),
+      home: ScanPage(
+        title: "Bluetooth Tracing",
+      ),
     );
   }
 }
@@ -179,7 +181,33 @@ class _MyHomePageState extends State<MyHomePage> {
                         .setManufacturerId(MANUFACTURER_ID);
                     beaconBroadcast
                         .start(); //.timeout(Duration(milliseconds: 3)){};
-
+                    flutterBlue.startScan(
+                      timeout: Duration(seconds: 4),
+                      allowDuplicates: false,
+                      scanMode: ScanMode.lowLatency,
+                    );
+                    flutterBlue.scanResults.listen((results) async {
+                      // do something with scan results
+                      for (ScanResult r in results) {
+                        int myUniqueKey = 5636; //5636;
+                        if (r.advertisementData.manufacturerData
+                            .containsKey(myUniqueKey)) {
+                          var scanUuid = hex.encode(r
+                              .advertisementData.manufacturerData.values
+                              .toList()[0]
+                              .sublist(2, 18));
+                          if (scanUuid == UUID) {
+                            await popup();
+                            alertboxStatus = true;
+                            //print('uuid: $scanUuid');
+                          }
+                          // print(
+                          //     '${r.device} found! rssi: ${r.rssi},key: ${r.advertisementData.manufacturerData.keys},adv_data: ${r.advertisementData.manufacturerData.values.toList()[0]},');
+                        }
+                      }
+                    }).onDone(() {
+                      flutterBlue.stopScan();
+                    });
                     scanInv = new Timer.periodic(
                         Duration(seconds: 5),
                         (Timer t) => {
