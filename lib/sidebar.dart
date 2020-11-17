@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:blue_trace/login.dart';
 
 class SideBar extends StatefulWidget {
   SideBar({Key key, this.covidbool});
@@ -66,11 +67,7 @@ class SideBarProperties extends State<SideBar> {
             title: Text('Feedback'),
             onTap: () => {Navigator.of(context).pop()},
           ),
-          ListTile(
-            leading: Icon(Icons.exit_to_app),
-            title: Text('Logout'),
-            onTap: () => {Navigator.of(context).pop()},
-          ),
+          LogoutButton(),
           SizedBox(height: 30),
           ListTile(
             leading: Icon(Icons.info),

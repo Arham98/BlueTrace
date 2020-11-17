@@ -1,10 +1,21 @@
-import 'package:blue_trace/user.dart';
+import 'package:blue_trace/Scanner.dart';
 import 'package:blue_trace/auth.dart';
+import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends StatefulWidget {
+  LoginScreenState createState() => LoginScreenState();
+}
+
+class LoginScreenState extends State<LoginScreen> {
+  auth.User user;
+
+  @override
+  void initState() {
+    super.initState();
+    authService.signOut();
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -20,7 +31,7 @@ class LoginScreen extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.fromLTRB(12, 25, 0, 0),
                     alignment: Alignment.topLeft,
-                    transformAlignment: Alignment.topLeft,
+                    //transformAlignment: Alignment.topLeft,
                     child: Text('Blue',
                         style: TextStyle(
                             fontSize: 80.0, fontWeight: FontWeight.bold)),
@@ -129,9 +140,37 @@ class LoginButton extends StatelessWidget {
                   ],
                 ))),
             onTap: () async {
-              authService.googleSignIn();
+              authService.googleSignIn().then((_) => {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => ScanPage(
+                                title: "Bluetooth Tracing",
+                              )),
+                    ),
+                  });
             },
           );
+        });
+  }
+}
+
+class LogoutButton extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder(
+        stream: authService.fireuser,
+        builder: (context, snapshot) {
+          return ListTile(
+              leading: Icon(Icons.exit_to_app),
+              title: Text('Logout'),
+              onTap: () async {
+                authService.signOut();
+                Navigator.of(context).pushAndRemoveUntil(
+                    MaterialPageRoute(builder: (context) {
+                  return LoginScreen();
+                }), ModalRoute.withName('/'));
+              });
         });
   }
 }

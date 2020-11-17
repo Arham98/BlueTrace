@@ -7,8 +7,13 @@ import 'package:vibration/vibration.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:blue_trace/Scanner.dart';
 import 'package:blue_trace/login.dart';
+import 'package:blue_trace/auth.dart';
+import 'package:provider/provider.dart';
+import 'package:firebase_core/firebase_core.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
   runApp(MyApp());
 }
 
@@ -16,15 +21,37 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Blue Trace',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
+    return Provider(
+      create: (context) => AuthService(),
+      child: MaterialApp(
+        title: 'Google Login',
+        theme: ThemeData(
+          primarySwatch: Colors.blue,
+          visualDensity: VisualDensity.adaptivePlatformDensity,
+        ),
+        home: LoginScreen(),
       ),
-      home: LoginScreen(),
-      // ScanPage(
-      //   title: "Bluetooth Tracing",
-      // ),
     );
   }
 }
+//void main()
+// {
+//   runApp(MyApp());
+// }
+
+// class MyApp extends StatelessWidget {
+//   // This widget is the root of your application.
+//   @override
+//   Widget build(BuildContext context) {
+//     return MaterialApp(
+//       title: 'Blue Trace',
+//       theme: ThemeData(
+//         primarySwatch: Colors.blue,
+//       ),
+//       home:
+//       ScanPage(
+//         title: "Bluetooth Tracing",
+//       ),
+//     );
+//   }
+// }

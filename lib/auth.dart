@@ -40,9 +40,13 @@ class AuthService {
     );
     auth.User fireuser =
         (await _auth.signInWithCredential(googlecredential)).user;
+    assert(!fireuser.isAnonymous);
+    assert(await fireuser.getIdToken() != null);
 
     updateUserData(fireuser);
 
+    auth.User currentUser = _auth.currentUser;
+    assert(currentUser.uid == fireuser.uid);
     loading.add(false);
     print("signed in " + fireuser.displayName);
     return fireuser;
@@ -66,3 +70,13 @@ class AuthService {
 }
 
 final AuthService authService = AuthService();
+
+class StateModel {
+  bool isLoading;
+  auth.User user;
+
+  StateModel({
+    this.isLoading = false,
+    this.user,
+  });
+}
