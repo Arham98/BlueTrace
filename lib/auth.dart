@@ -64,8 +64,8 @@ class AuthService {
     }, SetOptions(merge: true));
   }
 
-  void signOut() {
-    _auth.signOut();
+  Future<void> signOut() async {
+    await auth.FirebaseAuth.instance.signOut();
   }
 }
 

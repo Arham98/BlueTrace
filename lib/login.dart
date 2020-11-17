@@ -13,6 +13,7 @@ class LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
+    print(auth.FirebaseAuth.instance);
     authService.signOut();
   }
 
@@ -165,7 +166,7 @@ class LogoutButton extends StatelessWidget {
               leading: Icon(Icons.exit_to_app),
               title: Text('Logout'),
               onTap: () async {
-                authService.signOut();
+                await authService.signOut();
                 Navigator.of(context).pushAndRemoveUntil(
                     MaterialPageRoute(builder: (context) {
                   return LoginScreen();
