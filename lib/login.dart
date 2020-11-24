@@ -112,8 +112,7 @@ class LoginScreenState extends State<LoginScreen> {
                                   .where('googleUid', isEqualTo: googleUid)
                                   .get()
                                   .then((result) async {
-                                if (result == null) {
-                                  print('here');
+                                if (result.docs.isEmpty) {
                                   var newUuid; // = randomAlphaNumeric(10);
                                   while (true) {
                                     newUuid = randomAlphaNumeric(16);
@@ -121,14 +120,16 @@ class LoginScreenState extends State<LoginScreen> {
                                         .collection("users")
                                         .where('uuid', isEqualTo: newUuid)
                                         .get();
-                                    if (res == null) {
+                                    if (res.docs.isEmpty) {
                                       break;
                                     }
                                   }
-                                  print('here2');
-                                  await FirebaseFirestore.instance
-                                      .collection("users")
-                                      .add({
+                                  DocumentReference ref = FirebaseFirestore
+                                      .instance
+                                      .collection('users')
+                                      .doc(googleUid);
+                                  await ref
+                                      .set({
                                         'name': auth.FirebaseAuth.instance
                                             .currentUser.displayName,
                                         'googleUid': googleUid,
@@ -137,7 +138,7 @@ class LoginScreenState extends State<LoginScreen> {
                                         'email': auth.FirebaseAuth.instance
                                             .currentUser.email,
                                         'uuid': newUuid,
-                                      })
+                                      }, SetOptions(merge: true))
                                       .then((_) {})
                                       .catchError((e) {
                                         print(e);
@@ -166,101 +167,6 @@ class LoginScreenState extends State<LoginScreen> {
   }
 }
 
-// class LoginButton extends StatelessWidget {
-//   @override
-//   Widget build(BuildContext context) {
-//     return StreamBuilder(
-//         stream: authService.fireuser,
-//         builder: (context, snapshot) {
-//           return InkWell(
-//             child: Container(
-//                 width: MediaQuery.of(context).size.width * 0.7,
-//                 height: MediaQuery.of(context).size.height * 0.1,
-//                 decoration: BoxDecoration(
-//                     borderRadius: BorderRadius.circular(40),
-//                     color: Colors.cyan),
-//                 child: Center(
-//                     child: Row(
-//                   children: <Widget>[
-//                     SizedBox(
-//                       width: 15,
-//                     ),
-//                     Container(
-//                       height: 35.0,
-//                       width: 35.0,
-//                       decoration: BoxDecoration(
-//                         image: DecorationImage(
-//                             image: AssetImage('assets/images/google.png'),
-//                             fit: BoxFit.scaleDown),
-//                         shape: BoxShape.circle,
-//                       ),
-//                     ),
-//                     SizedBox(
-//                       width: 10,
-//                     ),
-//                     Text(
-//                       'Sign In with Google',
-//                       style: TextStyle(
-//                           fontSize: 20.0,
-//                           fontWeight: FontWeight.bold,
-//                           color: Colors.white),
-//                     ),
-//                   ],
-//                 ))),
-//             onTap: () async {
-//               authService.googleSignIn().then((_) async {
-//                 var googleUid = auth.FirebaseAuth.instance.currentUser.uid;
-//                 await FirebaseFirestore.instance
-//                     .collection("users")
-//                     .where('googleUid', isEqualTo: googleUid)
-//                     .get()
-//                     .then((result) async {
-//                   if (result == null) {
-//                     print('here');
-//                     var newUuid; // = randomAlphaNumeric(10);
-//                     while (true) {
-//                       newUuid = randomAlphaNumeric(16);
-//                       var res = await FirebaseFirestore.instance
-//                           .collection("users")
-//                           .where('uuid', isEqualTo: newUuid)
-//                           .get();
-//                       if (res == null) {
-//                         break;
-//                       }
-//                     }
-//                     print('here2');
-//                     await FirebaseFirestore.instance
-//                         .collection("users")
-//                         .add({
-//                           'name': auth
-//                               .FirebaseAuth.instance.currentUser.displayName,
-//                           'googleUid': googleUid,
-//                           'cnic': 0,
-//                           'covidStatus': false,
-//                           'email': auth.FirebaseAuth.instance.currentUser.email,
-//                           'uuid': newUuid,
-//                         })
-//                         .then((_) {})
-//                         .catchError((e) {
-//                           print(e);
-//                         });
-//                   }
-//                 });
-
-//                 Navigator.push(
-//                   context,
-//                   MaterialPageRoute(
-//                       builder: (context) => ScanPage(
-//                             title: "Bluetooth Tracing",
-//                           )),
-//                 );
-//               });
-//             },
-//           );
-//         });
-//   }
-// }
-
 class LogoutButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -271,7 +177,22 @@ class LogoutButton extends StatelessWidget {
               leading: Icon(Icons.exit_to_app),
               title: Text('Logout'),
               onTap: () async {
-                await authService.signOut();
+                Navigator.popUntil(context, (Route route) {
+                  return route.isFirst;
+                });
+                Navigator.pushReplacement(context, MaterialPageRoute(
+                  builder: (BuildContext context) {
+                    return LoginScreen();
+                  },
+                ));
+                await Future.delayed(Duration(seconds: 1), () {
+                  authService.signOut().then((dynamic) {
+                    print("Successful Logout");
+                  }).catchError((e, s) {
+                    print(e);
+                    print(s);
+                  });
+                });
               });
         });
   }

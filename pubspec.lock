@@ -8,6 +8,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.5.0-nullsafety.3"
+  base16:
+    dependency: "direct main"
+    description:
+      name: base16
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "2.0.2"
   beacon_broadcast:
     dependency: "direct main"
     description:

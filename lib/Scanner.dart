@@ -9,6 +9,10 @@ import 'package:vibration/vibration.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:blue_trace/sidebar.dart';
 import 'package:blue_trace/auth.dart';
+import 'package:blue_trace/Mapper.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart' as auth;
+import 'package:base16/base16.dart';
 
 class ScanPage extends StatefulWidget {
   ScanPage({Key key, this.title}) : super(key: key);
@@ -26,14 +30,15 @@ class _ScanPageState extends State<ScanPage> {
   bool alertboxStatus = false;
   Timer scanInv;
   String blueOnOffStr = 'Start Scanning';
+  UserData myUserData;
 
   FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
   var androidInitializationSettings;
   //var initializationSettings;
-
-  static const UUID =
-      '7a3973415133734f78564c757957734f'; //'62bdc0ef-7bd3-41eb-9923-59ea8b1241d3';
+  //print(_us);_userData
+  static var currUUID; //=
+  //'7a3973415133734f78564c757957734f'; //'62bdc0ef-7bd3-41eb-9923-59ea8b1241d3';
   static const MAJOR_ID = 1;
   static const MINOR_ID = 1;
   static const TRANSMISSION_POWER = 3;
@@ -55,6 +60,20 @@ class _ScanPageState extends State<ScanPage> {
     });
     androidInitializationSettings =
         new AndroidInitializationSettings('mipmap/ic_launcher');
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      getData();
+    });
+    currUUID = hex.encode(base16decode(myUserData.uuid));
+  }
+
+  void getData() async {
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(auth.FirebaseAuth.instance.currentUser.uid)
+        .get()
+        .then((usrData) => {
+              myUserData = UserData.fromData(usrData.data()),
+            });
   }
 
   // Future selectNotification(String payload) async {
@@ -88,9 +107,16 @@ class _ScanPageState extends State<ScanPage> {
   //   await notificationFunc();
   // }
 
-  Future<void> popup() async {
+  Future<void> popup(String uuid1, String uuid2) async {
     if (alertboxStatus == false) {
       alertboxStatus = true;
+      await FirebaseFirestore.instance.collection('userCloseContact').add({
+        'uuid1': uuid1,
+        'uuid2': uuid2,
+        'timestamp': Timestamp.fromMillisecondsSinceEpoch(
+            DateTime.now().millisecondsSinceEpoch),
+        'user1': myUserData.name,
+      });
       showDialog(
         //User friendly error message when the screen has been displayed
         context: context,
@@ -159,7 +185,7 @@ class _ScanPageState extends State<ScanPage> {
                   if (isSwitched) {
                     stopText();
                     beaconBroadcast
-                        .setUUID(UUID)
+                        .setUUID(currUUID)
                         .setMajorId(MAJOR_ID)
                         .setMinorId(MINOR_ID)
                         .setTransmissionPower(TRANSMISSION_POWER)
@@ -183,8 +209,12 @@ class _ScanPageState extends State<ScanPage> {
                               .advertisementData.manufacturerData.values
                               .toList()[0]
                               .sublist(2, 18));
-                          if (scanUuid == UUID) {
-                            await popup();
+                          var contactUuid = base16encode(r
+                              .advertisementData.manufacturerData.values
+                              .toList()[0]
+                              .sublist(2, 18));
+                          if (scanUuid != currUUID) {
+                            await popup(myUserData.uuid, contactUuid);
                             alertboxStatus = true;
                             //print('uuid: $scanUuid');
                           }
@@ -218,8 +248,14 @@ class _ScanPageState extends State<ScanPage> {
                                         .values
                                         .toList()[0]
                                         .sublist(2, 18));
-                                    if (scanUuid == UUID) {
-                                      await popup();
+                                    var contactUuid = base16encode(r
+                                        .advertisementData
+                                        .manufacturerData
+                                        .values
+                                        .toList()[0]
+                                        .sublist(2, 18));
+                                    if (scanUuid != currUUID) {
+                                      await popup(myUserData.uuid, contactUuid);
                                       alertboxStatus = true;
                                       //print('uuid: $scanUuid');
                                     }

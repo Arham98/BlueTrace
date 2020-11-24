@@ -1,3 +1,4 @@
+import 'package:blue_trace/Mapper.dart';
 import 'package:flutter/material.dart';
 import 'package:blue_trace/login.dart';
 import 'package:firebase_auth/firebase_auth.dart' as auth;
@@ -14,6 +15,8 @@ class SideBar extends StatefulWidget {
 class SideBarProperties extends State<SideBar> {
   SideBarProperties({Key key, this.covidbool});
   bool covidbool;
+  String username;
+  String curruuid;
 
   @override
   void initState() {
@@ -30,8 +33,11 @@ class SideBarProperties extends State<SideBar> {
             isEqualTo: auth.FirebaseAuth.instance.currentUser.uid)
         .get()
         .then((val) async {
-      covidbool = val.docs.contains('covidStatus');
-      print(val.docs.contains('email'));
+      UserData dat = UserData.fromData(val.docs.first.data());
+      covidbool = dat.covidStatus;
+      username = dat.name;
+      curruuid = dat.uuid;
+      print(dat.email);
     }).catchError((e) {
       print(e);
     });
@@ -65,7 +71,15 @@ class SideBarProperties extends State<SideBar> {
             title: const Text('Tested Covid Positive'),
             secondary: const Icon(Icons.coronavirus_outlined),
             value: covidbool,
-            onChanged: (val) {
+            onChanged: (val) async {
+              await FirebaseFirestore.instance
+                  .collection('userCloseContact')
+                  .add({
+                'uuid': curruuid,
+                'timestamp': Timestamp.fromMillisecondsSinceEpoch(
+                    DateTime.now().millisecondsSinceEpoch),
+                'user': username,
+              });
               if (val && covidbool == false) {
                 setState(() {
                   covidbool = true;

@@ -40,20 +40,27 @@ class UserData {
     };
   }
 
-  // void update(String _name, int _cnic, String _uuid, String _email) {
-  //   if (_name.isNotEmpty) {
-  //     this.name = _name;
-  //   }
-  //   if (_cnic.isNotEmpty) {
-  //     this.cnic = _cnic;
-  //   }
-  //   if (_email.isNotEmpty) {
-  //     this.email = _email;
-  //   }
-  //   if (_uuid.isNotEmpty) {
-  //     this.uuid = _uuid;
-  //   }
-  // }
+  void update(String _name, int _cnic, String _uuid, String _email,
+      String _googleUid, bool _covidStatus) {
+    if (_name.isNotEmpty) {
+      this.name = _name;
+    }
+    if (_cnic == 0) {
+      this.cnic = _cnic;
+    }
+    if (_email.isNotEmpty) {
+      this.email = _email;
+    }
+    if (_uuid.isNotEmpty) {
+      this.uuid = _uuid;
+    }
+    if (_googleUid.isNotEmpty) {
+      this.googleUid = _googleUid;
+    }
+    if (_covidStatus == false) {
+      this.covidStatus = _covidStatus;
+    }
+  }
 }
 
 class ContactData {

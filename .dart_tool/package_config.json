@@ -8,6 +8,12 @@
       "languageVersion": "2.12"
     },
     {
+      "name": "base16",
+      "rootUri": "file:///C:/Users/arham/AppData/Local/Pub/Cache/hosted/pub.dartlang.org/base16-2.0.2",
+      "packageUri": "lib/",
+      "languageVersion": "2.3"
+    },
+    {
       "name": "beacon_broadcast",
       "rootUri": "file:///C:/Users/arham/AppData/Local/Pub/Cache/hosted/pub.dartlang.org/beacon_broadcast-0.2.1",
       "packageUri": "lib/",
@@ -410,7 +416,7 @@
       "languageVersion": "2.7"
     }
   ],
-  "generated": "2020-11-24T17:43:55.650734Z",
+  "generated": "2020-11-24T20:30:21.923459Z",
   "generator": "pub",
   "generatorVersion": "2.12.0-29.10.beta"
 }
