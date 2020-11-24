@@ -6,45 +6,54 @@ class UserId {
 }
 
 class UserData {
-  String uid;
+  String googleUid;
   String name;
-  String cnic;
+  int cnic;
   String uuid;
   String email;
+  bool covidStatus;
 
-  UserData({this.uid, this.name, this.cnic, this.uuid, this.email});
+  UserData(
+      {this.googleUid,
+      this.name,
+      this.cnic,
+      this.uuid,
+      this.email,
+      this.covidStatus});
 
   UserData.fromData(Map<String, dynamic> data)
-      : uid = data['uid'],
+      : googleUid = data['googleUid'],
         name = data['name'],
         cnic = data['cnic'],
         uuid = data['uuid'],
-        email = data['email'];
+        email = data['email'],
+        covidStatus = data['coivdStatus'];
 
   Map<String, dynamic> toJSON() {
     return {
-      'uid': uid,
+      'googleUid': googleUid,
       'name': name,
       'cnic': cnic,
       'uuid': uuid,
       'email': email,
+      'coivdStatus': covidStatus,
     };
   }
 
-  void update(String _name, String _cnic, String _uuid, String _email) {
-    if (_name.isNotEmpty) {
-      this.name = _name;
-    }
-    if (_cnic.isNotEmpty) {
-      this.cnic = _cnic;
-    }
-    if (_email.isNotEmpty) {
-      this.email = _email;
-    }
-    if (_uuid.isNotEmpty) {
-      this.uuid = _uuid;
-    }
-  }
+  // void update(String _name, int _cnic, String _uuid, String _email) {
+  //   if (_name.isNotEmpty) {
+  //     this.name = _name;
+  //   }
+  //   if (_cnic.isNotEmpty) {
+  //     this.cnic = _cnic;
+  //   }
+  //   if (_email.isNotEmpty) {
+  //     this.email = _email;
+  //   }
+  //   if (_uuid.isNotEmpty) {
+  //     this.uuid = _uuid;
+  //   }
+  // }
 }
 
 class ContactData {

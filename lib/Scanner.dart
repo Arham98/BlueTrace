@@ -1,5 +1,6 @@
 //import 'package:blue_trace/main.dart';
 import 'dart:async';
+import 'package:blue_trace/login.dart';
 import 'package:convert/convert.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue/flutter_blue.dart';
@@ -7,6 +8,7 @@ import 'package:beacon_broadcast/beacon_broadcast.dart';
 import 'package:vibration/vibration.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:blue_trace/sidebar.dart';
+import 'package:blue_trace/auth.dart';
 
 class ScanPage extends StatefulWidget {
   ScanPage({Key key, this.title}) : super(key: key);
@@ -248,21 +250,49 @@ class _ScanPageState extends State<ScanPage> {
                 ),
               ),
             ),
-            Padding(
-              padding: EdgeInsets.all(16.0),
+            // Padding(
+            //   padding: EdgeInsets.all(16.0),
+            // ),
+            SizedBox(
+              height: 0.2 * MediaQuery.of(context).size.height,
+            ),
+            Center(
+              child: FlatButton(
+                minWidth: 0.5 * MediaQuery.of(context).size.width,
+                color: Colors.blue,
+                textColor: Colors.white,
+                disabledColor: Colors.grey,
+                disabledTextColor: Colors.black,
+                padding: EdgeInsets.all(8.0),
+                splashColor: Colors.blueAccent,
+                onPressed: () async {
+                  Navigator.popUntil(context, (Route route) {
+                    return route.isFirst;
+                  });
+                  Navigator.pushReplacement(context, MaterialPageRoute(
+                    builder: (BuildContext context) {
+                      return LoginScreen();
+                    },
+                  ));
+                  await Future.delayed(Duration(seconds: 1), () {
+                    authService.signOut().then((dynamic) {
+                      print("Successful Logout");
+                    }).catchError((e, s) {
+                      print(e);
+                      print(s);
+                    });
+                  });
+                  //await ;
+                },
+                child: Text(
+                  'Sign Out',
+                  style: TextStyle(fontSize: 20.0),
+                ),
+              ),
             ),
           ],
         ),
       ),
-      // floatingActionButton: FloatingActionButton(
-      //   onPressed: () async {
-      //     popup();
-      //     //_showNotif();
-      //     // Add your onPressed code here!
-      //   },
-      //   child: Icon(Icons.notification_important),
-      //   backgroundColor: Colors.green,
-      // ),
     );
   }
 }

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:blue_trace/login.dart';
+import 'package:firebase_auth/firebase_auth.dart' as auth;
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class SideBar extends StatefulWidget {
   SideBar({Key key, this.covidbool});
@@ -12,14 +14,32 @@ class SideBar extends StatefulWidget {
 class SideBarProperties extends State<SideBar> {
   SideBarProperties({Key key, this.covidbool});
   bool covidbool;
-  bool _ischecked;
-  // void onChanged(bool val){
-  //   setState(() {
-  //     _ischecked = val;
-  //   });
-  // }
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _asyncMethod();
+    });
+  }
+
+  _asyncMethod() async {
+    await FirebaseFirestore.instance
+        .collection("users")
+        .where('googleUid',
+            isEqualTo: auth.FirebaseAuth.instance.currentUser.uid)
+        .get()
+        .then((val) async {
+      covidbool = val.docs.contains('covidStatus');
+      print(val.docs.contains('email'));
+    }).catchError((e) {
+      print(e);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    //await initstate();
     return Drawer(
       child: ListView(
         padding: EdgeInsets.zero,
@@ -58,13 +78,8 @@ class SideBarProperties extends State<SideBar> {
             },
           ),
           ListTile(
-            leading: Icon(Icons.settings),
-            title: Text('Covid Status'),
-            onTap: () => {Navigator.of(context).pop()},
-          ),
-          ListTile(
             leading: Icon(Icons.border_color),
-            title: Text('Feedback'),
+            title: Text('Feedback1'),
             onTap: () => {Navigator.of(context).pop()},
           ),
           LogoutButton(),
@@ -76,7 +91,6 @@ class SideBarProperties extends State<SideBar> {
               'Please note that you cannot uncheck the covid checkbox, and must only enable it if you have received your test results poistive for Covid-19.',
               textScaleFactor: 0.5,
             ),
-            //onTap: () => {Navigator.of(context).pop()},
           ),
         ],
       ),

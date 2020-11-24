@@ -1,7 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:blue_trace/Mapper.dart';
-import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:rxdart/rxdart.dart';
 
@@ -43,7 +41,7 @@ class AuthService {
     assert(!fireuser.isAnonymous);
     assert(await fireuser.getIdToken() != null);
 
-    updateUserData(fireuser);
+    //updateUserData(fireuser);
 
     auth.User currentUser = _auth.currentUser;
     assert(currentUser.uid == fireuser.uid);

@@ -1,7 +1,9 @@
 import 'package:blue_trace/Scanner.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:blue_trace/auth.dart';
 import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:flutter/material.dart';
+import 'package:random_string/random_string.dart';
 
 class LoginScreen extends StatefulWidget {
   LoginScreenState createState() => LoginScreenState();
@@ -9,12 +11,13 @@ class LoginScreen extends StatefulWidget {
 
 class LoginScreenState extends State<LoginScreen> {
   auth.User user;
+  final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
 
   @override
   void initState() {
     super.initState();
     print(auth.FirebaseAuth.instance);
-    authService.signOut();
+    //authService.signOut();
   }
 
   @override
@@ -22,6 +25,7 @@ class LoginScreenState extends State<LoginScreen> {
     return MaterialApp(
         title: 'Sign in',
         home: Scaffold(
+            key: _scaffoldKey,
             appBar: AppBar(
               title: Text('Sign in'),
               backgroundColor: Colors.cyan,
@@ -50,111 +54,212 @@ class LoginScreenState extends State<LoginScreen> {
                   SizedBox(
                     height: 16,
                   ),
-                  LoginButton(),
+                  StreamBuilder(
+                      stream: authService.fireuser,
+                      builder: (context, snapshot) {
+                        return InkWell(
+                          child: Container(
+                              width: MediaQuery.of(context).size.width * 0.7,
+                              height: MediaQuery.of(context).size.height * 0.1,
+                              decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(40),
+                                  color: Colors.cyan),
+                              child: Center(
+                                  child: Row(
+                                children: <Widget>[
+                                  SizedBox(
+                                    width: 15,
+                                  ),
+                                  Container(
+                                    height: 35.0,
+                                    width: 35.0,
+                                    decoration: BoxDecoration(
+                                      image: DecorationImage(
+                                          image: AssetImage(
+                                              'assets/images/google.png'),
+                                          fit: BoxFit.scaleDown),
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                  SizedBox(
+                                    width: 10,
+                                  ),
+                                  Text(
+                                    'Sign In with Google',
+                                    style: TextStyle(
+                                        fontSize: 20.0,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white),
+                                  ),
+                                ],
+                              ))),
+                          onTap: () async {
+                            await authService.googleSignIn().then((_) async {
+                              ScaffoldMessenger.of(context)
+                                  .showSnackBar(new SnackBar(
+                                //duration: new Duration(seconds: 4),
+                                content: new Row(
+                                  children: <Widget>[
+                                    new CircularProgressIndicator(),
+                                    new Text("  Signing-In...")
+                                  ],
+                                ),
+                              ));
+                              var googleUid =
+                                  auth.FirebaseAuth.instance.currentUser.uid;
+                              await FirebaseFirestore.instance
+                                  .collection("users")
+                                  .where('googleUid', isEqualTo: googleUid)
+                                  .get()
+                                  .then((result) async {
+                                if (result == null) {
+                                  print('here');
+                                  var newUuid; // = randomAlphaNumeric(10);
+                                  while (true) {
+                                    newUuid = randomAlphaNumeric(16);
+                                    var res = await FirebaseFirestore.instance
+                                        .collection("users")
+                                        .where('uuid', isEqualTo: newUuid)
+                                        .get();
+                                    if (res == null) {
+                                      break;
+                                    }
+                                  }
+                                  print('here2');
+                                  await FirebaseFirestore.instance
+                                      .collection("users")
+                                      .add({
+                                        'name': auth.FirebaseAuth.instance
+                                            .currentUser.displayName,
+                                        'googleUid': googleUid,
+                                        'cnic': 0,
+                                        'covidStatus': false,
+                                        'email': auth.FirebaseAuth.instance
+                                            .currentUser.email,
+                                        'uuid': newUuid,
+                                      })
+                                      .then((_) {})
+                                      .catchError((e) {
+                                        print(e);
+                                      });
+                                }
+                              });
+
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => ScanPage(
+                                          title: "Bluetooth Tracing",
+                                        )),
+                              );
+                            });
+                          },
+                        );
+                      }),
+                  //LoginButton(),
                   SizedBox(
                     height: 16,
                   ),
-                  InkWell(
-                    child: Container(
-                        width: MediaQuery.of(context).size.width * 0.7,
-                        height: MediaQuery.of(context).size.height * 0.1,
-                        decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(40),
-                            color: Colors.cyan),
-                        child: Center(
-                            child: Row(
-                          children: <Widget>[
-                            SizedBox(
-                              width: 15,
-                            ),
-                            Container(
-                              height: 35.0,
-                              width: 35.0,
-                              decoration: BoxDecoration(
-                                image: DecorationImage(
-                                    image:
-                                        AssetImage('assets/images/google.png'),
-                                    fit: BoxFit.scaleDown),
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                            SizedBox(
-                              width: 10,
-                            ),
-                            Text(
-                              'Sign Up with Google',
-                              style: TextStyle(
-                                  fontSize: 20.0,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white),
-                            ),
-                          ],
-                        ))),
-                    onTap: () async {},
-                  ),
-                  SizedBox(height: 30.0),
                 ],
               ),
             )));
   }
 }
 
-class LoginButton extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return StreamBuilder(
-        stream: authService.fireuser,
-        builder: (context, snapshot) {
-          return InkWell(
-            child: Container(
-                width: MediaQuery.of(context).size.width * 0.7,
-                height: MediaQuery.of(context).size.height * 0.1,
-                decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(40),
-                    color: Colors.cyan),
-                child: Center(
-                    child: Row(
-                  children: <Widget>[
-                    SizedBox(
-                      width: 15,
-                    ),
-                    Container(
-                      height: 35.0,
-                      width: 35.0,
-                      decoration: BoxDecoration(
-                        image: DecorationImage(
-                            image: AssetImage('assets/images/google.png'),
-                            fit: BoxFit.scaleDown),
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    SizedBox(
-                      width: 10,
-                    ),
-                    Text(
-                      'Sign In with Google',
-                      style: TextStyle(
-                          fontSize: 20.0,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white),
-                    ),
-                  ],
-                ))),
-            onTap: () async {
-              authService.googleSignIn().then((_) => {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => ScanPage(
-                                title: "Bluetooth Tracing",
-                              )),
-                    ),
-                  });
-            },
-          );
-        });
-  }
-}
+// class LoginButton extends StatelessWidget {
+//   @override
+//   Widget build(BuildContext context) {
+//     return StreamBuilder(
+//         stream: authService.fireuser,
+//         builder: (context, snapshot) {
+//           return InkWell(
+//             child: Container(
+//                 width: MediaQuery.of(context).size.width * 0.7,
+//                 height: MediaQuery.of(context).size.height * 0.1,
+//                 decoration: BoxDecoration(
+//                     borderRadius: BorderRadius.circular(40),
+//                     color: Colors.cyan),
+//                 child: Center(
+//                     child: Row(
+//                   children: <Widget>[
+//                     SizedBox(
+//                       width: 15,
+//                     ),
+//                     Container(
+//                       height: 35.0,
+//                       width: 35.0,
+//                       decoration: BoxDecoration(
+//                         image: DecorationImage(
+//                             image: AssetImage('assets/images/google.png'),
+//                             fit: BoxFit.scaleDown),
+//                         shape: BoxShape.circle,
+//                       ),
+//                     ),
+//                     SizedBox(
+//                       width: 10,
+//                     ),
+//                     Text(
+//                       'Sign In with Google',
+//                       style: TextStyle(
+//                           fontSize: 20.0,
+//                           fontWeight: FontWeight.bold,
+//                           color: Colors.white),
+//                     ),
+//                   ],
+//                 ))),
+//             onTap: () async {
+//               authService.googleSignIn().then((_) async {
+//                 var googleUid = auth.FirebaseAuth.instance.currentUser.uid;
+//                 await FirebaseFirestore.instance
+//                     .collection("users")
+//                     .where('googleUid', isEqualTo: googleUid)
+//                     .get()
+//                     .then((result) async {
+//                   if (result == null) {
+//                     print('here');
+//                     var newUuid; // = randomAlphaNumeric(10);
+//                     while (true) {
+//                       newUuid = randomAlphaNumeric(16);
+//                       var res = await FirebaseFirestore.instance
+//                           .collection("users")
+//                           .where('uuid', isEqualTo: newUuid)
+//                           .get();
+//                       if (res == null) {
+//                         break;
+//                       }
+//                     }
+//                     print('here2');
+//                     await FirebaseFirestore.instance
+//                         .collection("users")
+//                         .add({
+//                           'name': auth
+//                               .FirebaseAuth.instance.currentUser.displayName,
+//                           'googleUid': googleUid,
+//                           'cnic': 0,
+//                           'covidStatus': false,
+//                           'email': auth.FirebaseAuth.instance.currentUser.email,
+//                           'uuid': newUuid,
+//                         })
+//                         .then((_) {})
+//                         .catchError((e) {
+//                           print(e);
+//                         });
+//                   }
+//                 });
+
+//                 Navigator.push(
+//                   context,
+//                   MaterialPageRoute(
+//                       builder: (context) => ScanPage(
+//                             title: "Bluetooth Tracing",
+//                           )),
+//                 );
+//               });
+//             },
+//           );
+//         });
+//   }
+// }
 
 class LogoutButton extends StatelessWidget {
   @override
@@ -167,10 +272,6 @@ class LogoutButton extends StatelessWidget {
               title: Text('Logout'),
               onTap: () async {
                 await authService.signOut();
-                Navigator.of(context).pushAndRemoveUntil(
-                    MaterialPageRoute(builder: (context) {
-                  return LoginScreen();
-                }), ModalRoute.withName('/'));
               });
         });
   }
