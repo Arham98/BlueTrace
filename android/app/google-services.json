@@ -15,6 +15,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "40837083168-oadgr8of8f5fd7850qdokkh9glfmf87a.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.lums.bluetrace",
+            "certificate_hash": "823876f1b1a6b427e51422566747b8210b9baa51"
+          }
+        },
+        {
           "client_id": "40837083168-88on6d7qh04f0ppnif1i1pfef98mb60q.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
