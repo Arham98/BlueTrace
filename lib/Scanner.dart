@@ -60,10 +60,10 @@ class _ScanPageState extends State<ScanPage> {
     });
     androidInitializationSettings =
         new AndroidInitializationSettings('mipmap/ic_launcher');
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       getData();
     });
-    currUUID = hex.encode(base16decode(myUserData.uuid));
   }
 
   void getData() async {
@@ -73,6 +73,7 @@ class _ScanPageState extends State<ScanPage> {
         .get()
         .then((usrData) => {
               myUserData = UserData.fromData(usrData.data()),
+              currUUID = hex.encode(base16decode(myUserData.uuid)),
             });
   }
 
