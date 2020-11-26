@@ -73,6 +73,7 @@ class _ScanPageState extends State<ScanPage> {
         .get()
         .then((usrData) => {
               myUserData = UserData.fromData(usrData.data()),
+              //print(myUserData.uuid),
               currUUID = hex.encode(base16decode(myUserData.uuid)),
             });
   }
