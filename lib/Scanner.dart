@@ -294,40 +294,40 @@ class _ScanPageState extends State<ScanPage> {
             SizedBox(
               height: 0.2 * MediaQuery.of(context).size.height,
             ),
-            Center(
-              child: FlatButton(
-                minWidth: 0.5 * MediaQuery.of(context).size.width,
-                color: Colors.blue,
-                textColor: Colors.white,
-                disabledColor: Colors.grey,
-                disabledTextColor: Colors.black,
-                padding: EdgeInsets.all(8.0),
-                splashColor: Colors.blueAccent,
-                onPressed: () async {
-                  Navigator.popUntil(context, (Route route) {
-                    return route.isFirst;
-                  });
-                  Navigator.pushReplacement(context, MaterialPageRoute(
-                    builder: (BuildContext context) {
-                      return LoginScreen();
-                    },
-                  ));
-                  await Future.delayed(Duration(seconds: 1), () {
-                    authService.signOut().then((dynamic) {
-                      print("Successful Logout");
-                    }).catchError((e, s) {
-                      print(e);
-                      print(s);
-                    });
-                  });
-                  //await ;
-                },
-                child: Text(
-                  'Sign Out',
-                  style: TextStyle(fontSize: 20.0),
-                ),
-              ),
-            ),
+            // Center(
+            //   child: FlatButton(
+            //     minWidth: 0.5 * MediaQuery.of(context).size.width,
+            //     color: Colors.blue,
+            //     textColor: Colors.white,
+            //     disabledColor: Colors.grey,
+            //     disabledTextColor: Colors.black,
+            //     padding: EdgeInsets.all(8.0),
+            //     splashColor: Colors.blueAccent,
+            //     onPressed: () async {
+            //       Navigator.popUntil(context, (Route route) {
+            //         return route.isFirst;
+            //       });
+            //       Navigator.pushReplacement(context, MaterialPageRoute(
+            //         builder: (BuildContext context) {
+            //           return LoginScreen();
+            //         },
+            //       ));
+            //       await Future.delayed(Duration(seconds: 1), () {
+            //         authService.signOut().then((dynamic) {
+            //           print("Successful Logout");
+            //         }).catchError((e, s) {
+            //           print(e);
+            //           print(s);
+            //         });
+            //       });
+            //       //await ;
+            //     },
+            //     child: Text(
+            //       'Sign Out',
+            //       style: TextStyle(fontSize: 20.0),
+            //     ),
+            //   ),
+            // ),
           ],
         ),
       ),
