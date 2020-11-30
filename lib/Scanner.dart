@@ -1,18 +1,19 @@
 //import 'package:blue_trace/main.dart';
 import 'dart:async';
+import 'dart:convert';
+import 'dart:typed_data';
 import 'package:blue_trace/login.dart';
 import 'package:convert/convert.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_blue/flutter_blue.dart';
 import 'package:beacon_broadcast/beacon_broadcast.dart';
 import 'package:vibration/vibration.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:blue_trace/sidebar.dart';
-import 'package:blue_trace/auth.dart';
 import 'package:blue_trace/Mapper.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as auth;
-import 'package:base16/base16.dart';
 
 class ScanPage extends StatefulWidget {
   ScanPage({Key key, this.title}) : super(key: key);
@@ -25,10 +26,12 @@ class ScanPage extends StatefulWidget {
 class _ScanPageState extends State<ScanPage> {
   _ScanPageState({Key key, this.title});
   final String title;
+  final Map<String, DateTime> contactedUsers = {};
   FlutterBlue flutterBlue = FlutterBlue.instance;
   bool isSwitched = false;
   bool alertboxStatus = false;
   Timer scanInv;
+  Timer firebaseUpload;
   String blueOnOffStr = 'Start Scanning';
   UserData myUserData;
 
@@ -37,8 +40,7 @@ class _ScanPageState extends State<ScanPage> {
   var androidInitializationSettings;
   //var initializationSettings;
   //print(_us);_userData
-  static var currUUID; //=
-  //'7a3973415133734f78564c757957734f'; //'62bdc0ef-7bd3-41eb-9923-59ea8b1241d3';
+  static var currUUID;
   static const MAJOR_ID = 1;
   static const MINOR_ID = 1;
   static const TRANSMISSION_POWER = 3;
@@ -67,14 +69,23 @@ class _ScanPageState extends State<ScanPage> {
   }
 
   void getData() async {
+    String curruids = auth.FirebaseAuth.instance.currentUser.uid;
+    // var hexstr;
+    // var strr;
+    // var strrlst;
     await FirebaseFirestore.instance
         .collection('users')
         .doc(auth.FirebaseAuth.instance.currentUser.uid)
         .get()
         .then((usrData) => {
               myUserData = UserData.fromData(usrData.data()),
-              //print(myUserData.uuid),
-              currUUID = hex.encode(base16decode(myUserData.uuid)),
+              currUUID = hex.encode(myUserData.uuid.codeUnits),
+
+              // print(hex.encode(myUserData.uuid.codeUnits)),
+
+              // hexstr = hex.encode(myUserData.uuid.codeUnits),
+              // strrlst = hex.decode(hexstr), //.map((char) => null),
+              // strr = String.fromCharCodes(strrlst),
             });
   }
 
@@ -109,16 +120,16 @@ class _ScanPageState extends State<ScanPage> {
   //   await notificationFunc();
   // }
 
-  Future<void> popup(String uuid1, String uuid2) async {
+  Future<void> popup() async {
     if (alertboxStatus == false) {
       alertboxStatus = true;
-      await FirebaseFirestore.instance.collection('userCloseContact').add({
-        'uuid1': uuid1,
-        'uuid2': uuid2,
-        'timestamp': Timestamp.fromMillisecondsSinceEpoch(
-            DateTime.now().millisecondsSinceEpoch),
-        'user1': myUserData.name,
-      });
+      // await FirebaseFirestore.instance.collection('userCloseContact').add({
+      //   'uuid1': uuid1,
+      //   'uuid2': uuid2,
+      //   'timestamp': Timestamp.fromMillisecondsSinceEpoch(
+      //       DateTime.now().millisecondsSinceEpoch),
+      //   'user1': myUserData.name,
+      // });
       showDialog(
         //User friendly error message when the screen has been displayed
         context: context,
@@ -211,17 +222,22 @@ class _ScanPageState extends State<ScanPage> {
                               .advertisementData.manufacturerData.values
                               .toList()[0]
                               .sublist(2, 18));
-                          var contactUuid = base16encode(r
+                          var contactUuid = String.fromCharCodes(r
                               .advertisementData.manufacturerData.values
                               .toList()[0]
                               .sublist(2, 18));
+                          print("$scanUuid, $currUUID");
                           if (scanUuid != currUUID) {
-                            await popup(myUserData.uuid, contactUuid);
+                            if (contactedUsers.containsKey(contactUuid)) {
+                              contactedUsers.update(
+                                  contactUuid, (value) => DateTime.now());
+                            } else {
+                              contactedUsers[contactUuid] = DateTime.now();
+                            }
+                            await popup();
                             alertboxStatus = true;
                             //print('uuid: $scanUuid');
                           }
-                          // print(
-                          //     '${r.device} found! rssi: ${r.rssi},key: ${r.advertisementData.manufacturerData.keys},adv_data: ${r.advertisementData.manufacturerData.values.toList()[0]},');
                         }
                       }
                     }).onDone(() {
@@ -244,20 +260,29 @@ class _ScanPageState extends State<ScanPage> {
                                   int myUniqueKey = 5636; //5636;
                                   if (r.advertisementData.manufacturerData
                                       .containsKey(myUniqueKey)) {
+                                    print("$myUniqueKey");
                                     var scanUuid = hex.encode(r
                                         .advertisementData
                                         .manufacturerData
                                         .values
                                         .toList()[0]
                                         .sublist(2, 18));
-                                    var contactUuid = base16encode(r
+                                    var contactUuid = String.fromCharCodes(r
                                         .advertisementData
                                         .manufacturerData
                                         .values
                                         .toList()[0]
                                         .sublist(2, 18));
                                     if (scanUuid != currUUID) {
-                                      await popup(myUserData.uuid, contactUuid);
+                                      if (contactedUsers
+                                          .containsKey(contactUuid)) {
+                                        contactedUsers.update(contactUuid,
+                                            (value) => DateTime.now());
+                                      } else {
+                                        contactedUsers[contactUuid] =
+                                            DateTime.now();
+                                      }
+                                      await popup();
                                       alertboxStatus = true;
                                       //print('uuid: $scanUuid');
                                     }
@@ -269,6 +294,15 @@ class _ScanPageState extends State<ScanPage> {
                                 flutterBlue.stopScan();
                               }),
                             });
+
+                    firebaseUpload = new Timer.periodic(
+                        Duration(seconds: 5),
+                        (Timer t) => {
+                              contactedUsers.forEach((key, value) async {
+                                print("$key, $value");
+                              }),
+                              contactedUsers.clear(),
+                            });
                   } else {
                     // print(
                     //     'Off_Status: ${await beaconBroadcast.isAdvertising()},${scanInv.isActive},$isSwitched');
@@ -277,6 +311,9 @@ class _ScanPageState extends State<ScanPage> {
                     }
                     if (scanInv.isActive) {
                       scanInv.cancel();
+                    }
+                    if (firebaseUpload.isActive) {
+                      firebaseUpload.cancel();
                     }
                     strtText();
                     return null;
@@ -288,46 +325,9 @@ class _ScanPageState extends State<ScanPage> {
                 ),
               ),
             ),
-            // Padding(
-            //   padding: EdgeInsets.all(16.0),
-            // ),
             SizedBox(
               height: 0.2 * MediaQuery.of(context).size.height,
             ),
-            // Center(
-            //   child: FlatButton(
-            //     minWidth: 0.5 * MediaQuery.of(context).size.width,
-            //     color: Colors.blue,
-            //     textColor: Colors.white,
-            //     disabledColor: Colors.grey,
-            //     disabledTextColor: Colors.black,
-            //     padding: EdgeInsets.all(8.0),
-            //     splashColor: Colors.blueAccent,
-            //     onPressed: () async {
-            //       Navigator.popUntil(context, (Route route) {
-            //         return route.isFirst;
-            //       });
-            //       Navigator.pushReplacement(context, MaterialPageRoute(
-            //         builder: (BuildContext context) {
-            //           return LoginScreen();
-            //         },
-            //       ));
-            //       await Future.delayed(Duration(seconds: 1), () {
-            //         authService.signOut().then((dynamic) {
-            //           print("Successful Logout");
-            //         }).catchError((e, s) {
-            //           print(e);
-            //           print(s);
-            //         });
-            //       });
-            //       //await ;
-            //     },
-            //     child: Text(
-            //       'Sign Out',
-            //       style: TextStyle(fontSize: 20.0),
-            //     ),
-            //   ),
-            // ),
           ],
         ),
       ),
