@@ -1,4 +1,5 @@
 import 'package:blue_trace/Mapper.dart';
+import 'package:blue_trace/services.dart';
 import 'package:blue_trace/Scanner.dart' as scannerpgdata;
 import 'package:flutter/material.dart';
 import 'package:blue_trace/login.dart';
@@ -116,6 +117,8 @@ class SideBarProperties extends State<SideBar> {
                     .set({
                   'covidStatus': true,
                 }, SetOptions(merge: true));
+                //await WebAppServices.sendCovidSignal(
+                //    scannerpgdata.myUserData.uuid);
               } else {
                 await FirebaseFirestore.instance
                     .collection('users')
