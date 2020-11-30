@@ -35,7 +35,7 @@ class LabeledCheckbox extends StatelessWidget {
       },
       child: ListTile(
         leading: Icon(Icons.coronavirus_outlined),
-        title: Text('Feedback1'),
+        title: Text(label),
         trailing: Checkbox(
           value: value,
           onChanged: (bool newValue) async {
@@ -97,7 +97,7 @@ class SideBarProperties extends State<SideBar> {
             onTap: () => {Navigator.of(context).pop()},
           ),
           LabeledCheckbox(
-            label: 'This is the label text',
+            label: 'I tested Covid-Positive',
             padding: const EdgeInsets.symmetric(horizontal: 20.0),
             value: covidbool,
             onChanged: (bool newValue) async {
