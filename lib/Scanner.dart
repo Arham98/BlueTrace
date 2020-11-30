@@ -1,11 +1,7 @@
 //import 'package:blue_trace/main.dart';
 import 'dart:async';
-import 'dart:convert';
-import 'dart:typed_data';
-import 'package:blue_trace/login.dart';
 import 'package:convert/convert.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_blue/flutter_blue.dart';
 import 'package:beacon_broadcast/beacon_broadcast.dart';
 import 'package:vibration/vibration.dart';
@@ -14,6 +10,8 @@ import 'package:blue_trace/sidebar.dart';
 import 'package:blue_trace/Mapper.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as auth;
+
+UserData myUserData;
 
 class ScanPage extends StatefulWidget {
   ScanPage({Key key, this.title}) : super(key: key);
@@ -33,7 +31,6 @@ class _ScanPageState extends State<ScanPage> {
   Timer scanInv;
   Timer firebaseUpload;
   String blueOnOffStr = 'Start Scanning';
-  UserData myUserData;
 
   FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
@@ -69,7 +66,7 @@ class _ScanPageState extends State<ScanPage> {
   }
 
   void getData() async {
-    String curruids = auth.FirebaseAuth.instance.currentUser.uid;
+    //String curruids = auth.FirebaseAuth.instance.currentUser.uid;
     // var hexstr;
     // var strr;
     // var strrlst;
@@ -80,6 +77,7 @@ class _ScanPageState extends State<ScanPage> {
         .then((usrData) => {
               myUserData = UserData.fromData(usrData.data()),
               currUUID = hex.encode(myUserData.uuid.codeUnits),
+              print(currUUID),
 
               // print(hex.encode(myUserData.uuid.codeUnits)),
 
@@ -123,13 +121,6 @@ class _ScanPageState extends State<ScanPage> {
   Future<void> popup() async {
     if (alertboxStatus == false) {
       alertboxStatus = true;
-      // await FirebaseFirestore.instance.collection('userCloseContact').add({
-      //   'uuid1': uuid1,
-      //   'uuid2': uuid2,
-      //   'timestamp': Timestamp.fromMillisecondsSinceEpoch(
-      //       DateTime.now().millisecondsSinceEpoch),
-      //   'user1': myUserData.name,
-      // });
       showDialog(
         //User friendly error message when the screen has been displayed
         context: context,
@@ -296,10 +287,20 @@ class _ScanPageState extends State<ScanPage> {
                             });
 
                     firebaseUpload = new Timer.periodic(
-                        Duration(seconds: 5),
+                        Duration(seconds: 10),
                         (Timer t) => {
                               contactedUsers.forEach((key, value) async {
                                 print("$key, $value");
+                                await FirebaseFirestore.instance
+                                    .collection('userCloseContact')
+                                    .add({
+                                  'uuid1': myUserData.uuid,
+                                  'name': myUserData.name,
+                                  'uuid2': key,
+                                  'timestamp':
+                                      Timestamp.fromMillisecondsSinceEpoch(
+                                          value.millisecondsSinceEpoch),
+                                });
                               }),
                               contactedUsers.clear(),
                             });

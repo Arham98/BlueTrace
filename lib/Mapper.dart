@@ -27,7 +27,7 @@ class UserData {
         cnic = data['cnic'],
         uuid = data['uuid'],
         email = data['email'],
-        covidStatus = data['coivdStatus'];
+        covidStatus = data['covidStatus'];
 
   Map<String, dynamic> toJSON() {
     return {
@@ -36,7 +36,7 @@ class UserData {
       'cnic': cnic,
       'uuid': uuid,
       'email': email,
-      'coivdStatus': covidStatus,
+      'covidStatus': covidStatus,
     };
   }
 
@@ -56,9 +56,6 @@ class UserData {
     }
     if (_googleUid.isNotEmpty) {
       this.googleUid = _googleUid;
-    }
-    if (_covidStatus == false) {
-      this.covidStatus = _covidStatus;
     }
   }
 }

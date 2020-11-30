@@ -1,4 +1,5 @@
 import 'package:blue_trace/Mapper.dart';
+import 'package:blue_trace/Scanner.dart' as scannerpgdata;
 import 'package:flutter/material.dart';
 import 'package:blue_trace/login.dart';
 import 'package:firebase_auth/firebase_auth.dart' as auth;
@@ -12,11 +13,45 @@ class SideBar extends StatefulWidget {
       new SideBarProperties(covidbool: covidbool);
 }
 
+class LabeledCheckbox extends StatelessWidget {
+  const LabeledCheckbox({
+    this.label,
+    this.padding,
+    this.value,
+    this.onChanged,
+  });
+
+  final String label;
+  final EdgeInsets padding;
+  final bool value;
+  final Function onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () {
+        onChanged(!value);
+      },
+      child: ListTile(
+        leading: Icon(Icons.coronavirus_outlined),
+        title: Text('Feedback1'),
+        trailing: Checkbox(
+          value: value,
+          onChanged: (bool newValue) async {
+            onChanged(newValue);
+          },
+        ),
+      ),
+    );
+  }
+}
+
 class SideBarProperties extends State<SideBar> {
   SideBarProperties({Key key, this.covidbool});
   bool covidbool;
   String username;
   String curruuid;
+  bool covidFlag;
 
   @override
   void initState() {
@@ -27,36 +62,29 @@ class SideBarProperties extends State<SideBar> {
   }
 
   _asyncMethod() async {
-    await FirebaseFirestore.instance
-        .collection("users")
-        .where('googleUid',
-            isEqualTo: auth.FirebaseAuth.instance.currentUser.uid)
-        .get()
-        .then((val) async {
-      UserData dat = UserData.fromData(val.docs.first.data());
-      covidbool = dat.covidStatus;
-      username = dat.name;
-      curruuid = dat.uuid;
-      print(dat.email);
-    }).catchError((e) {
-      print(e);
-    });
+    UserData dat = scannerpgdata.myUserData;
+    covidbool = dat.covidStatus;
+    username = dat.name;
+    curruuid = dat.uuid;
+    covidFlag = dat.covidStatus;
+    // print(scannerpgdata.myUserData.email);
+    // print(scannerpgdata.myUserData.covidStatus);
+    // print(scannerpgdata.myUserData.googleUid);
   }
 
   @override
   Widget build(BuildContext context) {
-    //await initstate();
     return Drawer(
       child: ListView(
         padding: EdgeInsets.zero,
         children: <Widget>[
           DrawerHeader(
             child: Text(
-              'Side menu',
+              scannerpgdata.myUserData.name,
               style: TextStyle(color: Colors.white, fontSize: 25),
             ),
             decoration: BoxDecoration(
-              color: Colors.blueGrey,
+              color: Colors.blue,
               // image: DecorationImage(
               //     fit: BoxFit.fill,
               //     image: AssetImage('assets/images/cover.jpg'))
@@ -67,28 +95,39 @@ class SideBarProperties extends State<SideBar> {
             title: Text('Profile'),
             onTap: () => {Navigator.of(context).pop()},
           ),
-          CheckboxListTile(
-            title: const Text('Tested Covid Positive'),
-            secondary: const Icon(Icons.coronavirus_outlined),
+          LabeledCheckbox(
+            label: 'This is the label text',
+            padding: const EdgeInsets.symmetric(horizontal: 20.0),
             value: covidbool,
-            onChanged: (val) async {
-              await FirebaseFirestore.instance
-                  .collection('userCloseContact')
-                  .add({
-                'uuid': curruuid,
-                'timestamp': Timestamp.fromMillisecondsSinceEpoch(
-                    DateTime.now().millisecondsSinceEpoch),
-                'user': username,
-              });
-              if (val && covidbool == false) {
-                setState(() {
-                  covidbool = true;
+            onChanged: (bool newValue) async {
+              //print("$covidbool,$newValue");
+              if (newValue == true) {
+                await FirebaseFirestore.instance
+                    .collection('covidPositive')
+                    .add({
+                  'uuid': curruuid,
+                  'timestamp': Timestamp.fromMillisecondsSinceEpoch(
+                      DateTime.now().millisecondsSinceEpoch),
+                  'user': username,
                 });
-              } else if (val) {
-                return null;
+                await FirebaseFirestore.instance
+                    .collection('users')
+                    .doc(auth.FirebaseAuth.instance.currentUser.uid)
+                    .set({
+                  'covidStatus': true,
+                }, SetOptions(merge: true));
               } else {
-                val = true;
+                await FirebaseFirestore.instance
+                    .collection('users')
+                    .doc(auth.FirebaseAuth.instance.currentUser.uid)
+                    .set({
+                  'covidStatus': false,
+                }, SetOptions(merge: true));
               }
+              setState(() {
+                scannerpgdata.myUserData.covidStatus = newValue;
+                covidbool = newValue;
+              });
             },
           ),
           ListTile(
