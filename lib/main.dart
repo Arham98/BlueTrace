@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:blue_trace/Scanner.dart';
 import 'package:blue_trace/login.dart';
 import 'package:blue_trace/auth.dart';
+import 'package:blue_trace/notification.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -13,9 +15,14 @@ void main() async {
 }
 
 class MyApp extends StatelessWidget {
+  static final FirebaseMessaging _firebaseMessaging =
+      FirebaseMessaging.instance;
+
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+    final pushNotificationService = PushNotificationService(_firebaseMessaging);
+    pushNotificationService.initialise();
     if (auth.FirebaseAuth.instance.currentUser == null) {
       return Provider(
         create: (context) => AuthService(),

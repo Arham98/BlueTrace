@@ -10,6 +10,7 @@ import 'package:blue_trace/sidebar.dart';
 import 'package:blue_trace/Mapper.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as auth;
+import 'package:blue_trace/notification.dart';
 
 UserData myUserData;
 
@@ -32,9 +33,6 @@ class _ScanPageState extends State<ScanPage> {
   Timer firebaseUpload;
   String blueOnOffStr = 'Start Scanning';
 
-  FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-      FlutterLocalNotificationsPlugin();
-  var androidInitializationSettings;
   //var initializationSettings;
   //print(_us);_userData
   static var currUUID;
@@ -57,8 +55,6 @@ class _ScanPageState extends State<ScanPage> {
         //_isTransmissionSupported = isTransmissionSupported;
       });
     });
-    androidInitializationSettings =
-        new AndroidInitializationSettings('mipmap/ic_launcher');
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       getData();
@@ -87,40 +83,13 @@ class _ScanPageState extends State<ScanPage> {
             });
   }
 
-  // Future selectNotification(String payload) async {
-  //   if (payload != null) {
-  //     debugPrint('notification payload: $payload');
-  //   }
-  //   await Navigator.push(
-  //     context,
-  //     MaterialPageRoute<void>(builder: (context) => SecondScreen(payload)),
-  //   );
-  // }
+//Local Notification Functions
 
-  Future<void> notificationFunc() async {
-    AndroidNotificationDetails androidPlatformChannelSpecifics =
-        AndroidNotificationDetails(
-            'your channel id', 'your channel name', 'your channel description',
-            importance: Importance.max,
-            priority: Priority.high,
-            showWhen: false);
-    NotificationDetails platformChannelSpecifics =
-        NotificationDetails(android: androidPlatformChannelSpecifics);
-    await flutterLocalNotificationsPlugin.show(
-        0,
-        'Close Contact',
-        'You are within less than 2 metres near someone, please maintain social distancing.',
-        platformChannelSpecifics,
-        payload: 'item x');
-  }
-
-  // void _showNotif() async {
-  //   await notificationFunc();
-  // }
-
+//popup notifcation
   Future<void> popup() async {
     if (alertboxStatus == false) {
       alertboxStatus = true;
+      initializeNotification("String payload");
       showDialog(
         //User friendly error message when the screen has been displayed
         context: context,
@@ -332,6 +301,13 @@ class _ScanPageState extends State<ScanPage> {
           ],
         ),
       ),
+      // floatingActionButton: FloatingActionButton(
+      //   onPressed: () async {
+      //     print("POPOPPOPOP");
+      //   },
+      //   child: Icon(Icons.navigation),
+      //   backgroundColor: Colors.green,
+      // ),
     );
   }
 }
