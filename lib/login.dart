@@ -1,3 +1,5 @@
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:blue_trace/notification.dart';
 import 'package:blue_trace/Scanner.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:blue_trace/auth.dart';
@@ -12,6 +14,8 @@ class LoginScreen extends StatefulWidget {
 class LoginScreenState extends State<LoginScreen> {
   auth.User user;
   final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
+  static final FirebaseMessaging _firebaseMessaging =
+      FirebaseMessaging.instance;
 
   @override
   void initState() {
@@ -145,6 +149,9 @@ class LoginScreenState extends State<LoginScreen> {
                                 }
                               });
 
+                              final pushNotificationService =
+                                  PushNotificationService(_firebaseMessaging);
+                              pushNotificationService.initialise();
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(

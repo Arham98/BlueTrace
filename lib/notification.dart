@@ -70,7 +70,7 @@ class PushNotificationService {
     String token = await _firbaseNotification.getToken(
         vapidKey: auth.FirebaseAuth.instance.currentUser.uid);
 
-    print("FirebaseMessaging token: ${token}");
+    print("FirebaseMessaging token: $token");
     _firbaseNotification.setAutoInitEnabled(true);
 
     _firbaseNotification.setForegroundNotificationPresentationOptions(

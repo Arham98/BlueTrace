@@ -1,5 +1,4 @@
-import 'package:blue_trace/Mapper.dart';
-import 'package:blue_trace/services.dart';
+import 'package:blue_trace/user.dart';
 import 'package:blue_trace/Scanner.dart' as scannerpgdata;
 import 'package:flutter/material.dart';
 import 'package:blue_trace/login.dart';
@@ -52,26 +51,26 @@ class SideBarProperties extends State<SideBar> {
   bool covidbool;
   String username;
   String curruuid;
-  bool covidFlag;
 
   @override
   void initState() {
     super.initState();
+
+    covidbool = savedLocalUsrData.covidStatus;
+    username = savedLocalUsrData.name;
+    curruuid = savedLocalUsrData.uuid;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _asyncMethod();
+      //_asyncMethod();
     });
   }
 
-  _asyncMethod() async {
-    UserData dat = scannerpgdata.myUserData;
-    covidbool = dat.covidStatus;
-    username = dat.name;
-    curruuid = dat.uuid;
-    covidFlag = dat.covidStatus;
-    // print(scannerpgdata.myUserData.email);
-    // print(scannerpgdata.myUserData.covidStatus);
-    // print(scannerpgdata.myUserData.googleUid);
-  }
+  // _asyncMethod() async {
+  //   UserData dat = scannerpgdata.myUserData;
+  //   covidbool = dat.covidStatus;
+  //   username = dat.name;
+  //   curruuid = dat.uuid;
+  //   covidFlag = dat.covidStatus;
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -126,6 +125,16 @@ class SideBarProperties extends State<SideBar> {
                     .set({
                   'covidStatus': false,
                 }, SetOptions(merge: true));
+                var docid;
+                await FirebaseFirestore.instance
+                    .collection('covidPositive')
+                    .where('uuid', isEqualTo: savedLocalUsrData.uuid)
+                    .get()
+                    .then((value) => {docid = value.docs.first.id});
+                await FirebaseFirestore.instance
+                    .collection('covidPositive')
+                    .doc(docid)
+                    .delete();
               }
               setState(() {
                 scannerpgdata.myUserData.covidStatus = newValue;

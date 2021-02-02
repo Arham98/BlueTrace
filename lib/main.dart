@@ -21,8 +21,6 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    final pushNotificationService = PushNotificationService(_firebaseMessaging);
-    pushNotificationService.initialise();
     if (auth.FirebaseAuth.instance.currentUser == null) {
       return Provider(
         create: (context) => AuthService(),
@@ -36,6 +34,10 @@ class MyApp extends StatelessWidget {
         ),
       );
     } else {
+      final pushNotificationService =
+          PushNotificationService(_firebaseMessaging);
+      pushNotificationService.initialise();
+
       return Provider(
         create: (context) => AuthService(),
         child: MaterialApp(

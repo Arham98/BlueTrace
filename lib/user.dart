@@ -28,3 +28,30 @@ class UserProfileState extends State<UserProfile> {
     ]);
   }
 }
+
+class UserDataLocal {
+  int cnic;
+  bool covidStatus;
+  String email;
+  String googleUid;
+  String name;
+  String uuid;
+
+  UserDataLocal(
+      {this.cnic,
+      this.covidStatus,
+      this.email,
+      this.googleUid,
+      this.name,
+      this.uuid});
+
+  UserDataLocal.fromData(Map<String, dynamic> data)
+      : cnic = data['cnic'], //int.parse(data['cnic']),
+        covidStatus = data['covidStatus'], //.toLowerCase() == 'true',
+        email = data['email'],
+        googleUid = data['googleUid'],
+        name = data['name'],
+        uuid = data['uuid'];
+}
+
+UserDataLocal savedLocalUsrData;
