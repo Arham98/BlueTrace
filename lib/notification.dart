@@ -1,6 +1,56 @@
+//import 'dart:ffi';
+
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:firebase_auth/firebase_auth.dart' as auth;
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:blue_trace/Mapper.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+const ROOT = '10.0.2.2:8080';
+
+Future sendToken(String title) async {
+  var currUUID = "";
+  if (auth.FirebaseAuth.instance.currentUser.uid != null) {
+    var tempData;
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(auth.FirebaseAuth.instance.currentUser.uid)
+        .get()
+        .then((usrData) => {
+              tempData = UserData.fromData(usrData.data()),
+              currUUID = tempData.uuid,
+              //print(currUUID),
+
+              // print(hex.encode(myUserData.uuid.codeUnits)),
+
+              // hexstr = hex.encode(myUserData.uuid.codeUnits),
+              // strrlst = hex.decode(hexstr), //.map((char) => null),
+              // strr = String.fromCharCodes(strrlst),
+            });
+  }
+
+  final response = await http.post(
+    Uri.http(ROOT, ''),
+    headers: <String, String>{
+      'Content-Type': 'application/json; charset=UTF-8',
+    },
+    body: jsonEncode(<String, String>{
+      'token': title,
+      'uuid': currUUID,
+    }),
+  );
+  // if (response.statusCode == 201) {
+  //   // If the server did return a 201 CREATED response,
+  //   // then parse the JSON.
+  //   print(jsonDecode(response.body));
+  // } else {
+  //   // If the server did not return a 201 CREATED response,
+  //   // then throw an exception.
+  //   throw Exception('Failed to load album');
+  // }
+}
 
 Future selectNotification(String payload) async {
   if (payload != null) {
@@ -71,6 +121,7 @@ class PushNotificationService {
         vapidKey: auth.FirebaseAuth.instance.currentUser.uid);
 
     print("FirebaseMessaging token: $token");
+    await sendToken(token);
     _firbaseNotification.setAutoInitEnabled(true);
 
     _firbaseNotification.setForegroundNotificationPresentationOptions(
