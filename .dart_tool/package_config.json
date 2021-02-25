@@ -200,6 +200,12 @@
       "languageVersion": "2.2"
     },
     {
+      "name": "flutter_plugin_android_lifecycle",
+      "rootUri": "file:///C:/Users/arham/AppData/Local/Pub/Cache/hosted/pub.dartlang.org/flutter_plugin_android_lifecycle-1.0.11",
+      "packageUri": "lib/",
+      "languageVersion": "2.1"
+    },
+    {
       "name": "flutter_spinkit",
       "rootUri": "file:///C:/Users/arham/AppData/Local/Pub/Cache/hosted/pub.dartlang.org/flutter_spinkit-4.1.2+1",
       "packageUri": "lib/",
@@ -222,6 +228,18 @@
       "rootUri": "file:///C:/Users/arham/AppData/Local/Pub/Cache/hosted/pub.dartlang.org/font_awesome_flutter-8.10.0",
       "packageUri": "lib/",
       "languageVersion": "2.0"
+    },
+    {
+      "name": "google_maps_flutter",
+      "rootUri": "file:///C:/Users/arham/AppData/Local/Pub/Cache/hosted/pub.dartlang.org/google_maps_flutter-1.2.0",
+      "packageUri": "lib/",
+      "languageVersion": "2.1"
+    },
+    {
+      "name": "google_maps_flutter_platform_interface",
+      "rootUri": "file:///C:/Users/arham/AppData/Local/Pub/Cache/hosted/pub.dartlang.org/google_maps_flutter_platform_interface-1.2.0",
+      "packageUri": "lib/",
+      "languageVersion": "2.3"
     },
     {
       "name": "google_sign_in",
@@ -380,6 +398,12 @@
       "languageVersion": "2.10"
     },
     {
+      "name": "stream_transform",
+      "rootUri": "file:///C:/Users/arham/AppData/Local/Pub/Cache/hosted/pub.dartlang.org/stream_transform-1.2.0",
+      "packageUri": "lib/",
+      "languageVersion": "2.6"
+    },
+    {
       "name": "string_scanner",
       "rootUri": "file:///C:/Users/arham/AppData/Local/Pub/Cache/hosted/pub.dartlang.org/string_scanner-1.1.0-nullsafety.1",
       "packageUri": "lib/",
@@ -440,7 +464,7 @@
       "languageVersion": "2.7"
     }
   ],
-  "generated": "2021-02-11T23:31:38.241608Z",
+  "generated": "2021-02-25T05:24:54.510112Z",
   "generator": "pub",
   "generatorVersion": "2.10.5"
 }

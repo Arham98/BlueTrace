@@ -1,3 +1,4 @@
+import 'package:blue_trace/maps.dart';
 import 'package:blue_trace/user.dart';
 import 'package:blue_trace/Scanner.dart' as scannerpgdata;
 import 'package:flutter/material.dart';
@@ -146,6 +147,16 @@ class SideBarProperties extends State<SideBar> {
             leading: Icon(Icons.border_color),
             title: Text('Feedback1'),
             onTap: () => {Navigator.of(context).pop()},
+          ),
+          ListTile(
+            leading: Icon(Icons.map),
+            title: Text('Trace Map'),
+            onTap: () => {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => Maps()),
+              ),
+            },
           ),
           LogoutButton(),
           SizedBox(height: 30),
