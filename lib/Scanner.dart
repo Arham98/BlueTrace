@@ -13,6 +13,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:blue_trace/notification.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:location/location.dart';
+import 'dart:math' as math;
 
 UserData myUserData;
 
@@ -34,6 +36,9 @@ class _ScanPageState extends State<ScanPage> {
   Timer scanInv;
   Timer firebaseUpload;
   String blueOnOffStr = 'Start Scanning';
+  //StreamSubscription<String> popupStream;
+  double currentLatitude;
+  double currentLongitude;
 
   //var initializationSettings;
   //print(_us);_userData
@@ -171,6 +176,22 @@ class _ScanPageState extends State<ScanPage> {
                           padding: EdgeInsets.all(8.0),
                           splashColor: Colors.blueAccent,
                           onPressed: () async {
+                            bool serviceCheck =
+                                    await Location().serviceEnabled(),
+                                locationEnabled = true;
+                            if (!serviceCheck) {
+                              if (!(await Location().requestService())) {
+                                locationEnabled = false;
+                              }
+                            }
+                            if (PermissionStatus.denied ==
+                                await Location().hasPermission()) {
+                              if (PermissionStatus.granted !=
+                                  await Location().requestPermission()) {
+                                locationEnabled = false;
+                              }
+                            }
+
                             isSwitched = !isSwitched;
                             if (isSwitched) {
                               stopText();
@@ -217,7 +238,9 @@ class _ScanPageState extends State<ScanPage> {
                                         contactedUsers[contactUuid] =
                                             DateTime.now();
                                       }
-                                      await popup();
+                                      if (isSwitched) {
+                                        await popup();
+                                      }
                                       alertboxStatus = true;
                                       //print('uuid: $scanUuid');
                                     }
@@ -245,6 +268,17 @@ class _ScanPageState extends State<ScanPage> {
                                             if (r.advertisementData
                                                 .manufacturerData
                                                 .containsKey(myUniqueKey)) {
+                                              if (locationEnabled) {
+                                                LocationData locationData =
+                                                    await Location()
+                                                        .getLocation();
+                                                currentLatitude =
+                                                    locationData.latitude /
+                                                        (180 / math.pi);
+                                                currentLongitude =
+                                                    locationData.longitude /
+                                                        (180 / math.pi);
+                                              }
                                               print("$myUniqueKey");
                                               var scanUuid = hex.encode(r
                                                   .advertisementData
@@ -270,9 +304,16 @@ class _ScanPageState extends State<ScanPage> {
                                                   contactedUsers[contactUuid] =
                                                       DateTime.now();
                                                 }
-                                                await popup();
+                                                // popupStream = getData()
+                                                //     .asStream()
+                                                //     .listen((_) {
+                                                //   popup().then((_) =>
+                                                //       {alertboxStatus = true});
+                                                // });
+                                                if (isSwitched) {
+                                                  await popup();
+                                                }
                                                 alertboxStatus = true;
-                                                //print('uuid: $scanUuid');
                                               }
                                               // print(
                                               //     '${r.device} found! rssi: ${r.rssi},key: ${r.advertisementData.manufacturerData.keys},adv_data: ${r.advertisementData.manufacturerData.values.toList()[0]},');
@@ -298,6 +339,9 @@ class _ScanPageState extends State<ScanPage> {
                                             'timestamp': Timestamp
                                                 .fromMillisecondsSinceEpoch(value
                                                     .millisecondsSinceEpoch),
+                                            'location': GeoPoint(
+                                                currentLatitude,
+                                                currentLongitude),
                                           });
                                         }),
                                         contactedUsers.clear(),
@@ -314,6 +358,7 @@ class _ScanPageState extends State<ScanPage> {
                               if (firebaseUpload.isActive) {
                                 firebaseUpload.cancel();
                               }
+                              alertboxStatus = false;
                               strtText();
                               return null;
                             }

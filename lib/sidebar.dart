@@ -149,7 +149,7 @@ class SideBarProperties extends State<SideBar> {
             onTap: () => {Navigator.of(context).pop()},
           ),
           ListTile(
-            leading: Icon(Icons.map),
+            leading: Icon(Icons.location_pin),
             title: Text('Trace Map'),
             onTap: () => {
               Navigator.push(

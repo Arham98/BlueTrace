@@ -61,46 +61,55 @@ class UserData {
 }
 
 class ContactData {
-  String uuid1;
-  String uuid2;
-  String name1;
-  String name2;
+  bool covidStatus;
+  String uuid;
+  String sndUserName;
+  String sndUserUUID;
+  GeoPoint location;
   Timestamp timestamp;
 
-  ContactData({this.uuid1, this.uuid2, this.timestamp});
+  ContactData(
+      {this.covidStatus,
+      this.uuid,
+      this.timestamp,
+      this.sndUserName,
+      this.sndUserUUID,
+      this.location});
 
   ContactData.fromData(Map<String, dynamic> data)
-      : uuid1 = data['uuid1'],
-        uuid2 = data['uuid2'],
-        name1 = data['name1'],
-        name2 = data['name2'],
+      : covidStatus = data['covidStatus'],
+        uuid = data['uuid'],
+        sndUserName = data['sndUserName'],
+        location = data['location'],
+        sndUserUUID = data['sndUserUUID'],
         timestamp = data['timestamp'];
 
   Map<String, dynamic> toJSON() {
     return {
-      'uuid1': uuid1,
-      'uuid2': uuid2,
-      'name1': name1,
-      'name2': name2,
+      'covidStatus': covidStatus,
+      'uuid': uuid,
+      'sndUserName': sndUserName,
+      'sndUserUUID': sndUserUUID,
+      'location': location,
       'timestamp': timestamp,
     };
   }
 
-  void update(String _uuid1, String _uuid2, String _name1, String _name2,
-      Timestamp _timestamp) {
-    if (_uuid1.isNotEmpty) {
-      this.uuid1 = _uuid1;
-    }
-    if (_uuid2.isNotEmpty) {
-      this.uuid2 = _uuid2;
-    }
-    if (_name1.isNotEmpty) {
-      this.name1 = _name1;
-    }
-    if (_name2.isNotEmpty) {
-      this.name2 = _name2;
-    }
-  }
+  // void update(String _uuid1, String _uuid2, String _name1, String _name2,
+  //     Timestamp _timestamp) {
+  //   if (_uuid1.isNotEmpty) {
+  //     this.uuid1 = _uuid1;
+  //   }
+  //   if (_uuid2.isNotEmpty) {
+  //     this.uuid2 = _uuid2;
+  //   }
+  //   if (_name1.isNotEmpty) {
+  //     this.name1 = _name1;
+  //   }
+  //   if (_name2.isNotEmpty) {
+  //     this.name2 = _name2;
+  //   }
+  // }
 }
 
 class CovidData {

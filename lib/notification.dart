@@ -37,10 +37,12 @@ Future sendToken(String title) async {
       'Content-Type': 'application/json; charset=UTF-8',
     },
     body: jsonEncode(<String, String>{
+      'callType': "noti_token_provision",
       'token': title,
       'uuid': currUUID,
     }),
   );
+  print(response);
   // if (response.statusCode == 201) {
   //   // If the server did return a 201 CREATED response,
   //   // then parse the JSON.
