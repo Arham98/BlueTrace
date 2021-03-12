@@ -99,7 +99,8 @@ class LoginScreenState extends State<LoginScreen> {
                               ))),
                           onTap: () async {
                             await authService.googleSignIn().then((_) async {
-                              Scaffold.of(context).showSnackBar(new SnackBar(
+                              ScaffoldMessenger.of(context)
+                                  .showSnackBar(new SnackBar(
                                 //duration: new Duration(seconds: 4),
                                 content: new Row(
                                   children: <Widget>[
@@ -157,6 +158,7 @@ class LoginScreenState extends State<LoginScreen> {
                                 MaterialPageRoute(
                                     builder: (context) => ScanPage(
                                           title: "Bluetooth Tracing",
+                                          firstLaunch: true,
                                         )),
                               );
                             });

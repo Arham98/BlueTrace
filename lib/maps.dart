@@ -1,14 +1,14 @@
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart' as auth;
+//import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:flutter/widgets.dart';
 import 'dart:async';
 import 'package:blue_trace/user.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:blue_trace/Mapper.dart';
 import 'dart:math' as math;
-import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
+//import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 
 class MarkerText {
   String title;

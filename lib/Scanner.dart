@@ -15,20 +15,22 @@ import 'package:blue_trace/notification.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:location/location.dart';
 import 'dart:math' as math;
-
-UserData myUserData;
+import 'package:async/async.dart';
 
 class ScanPage extends StatefulWidget {
-  ScanPage({Key key, this.title}) : super(key: key);
+  ScanPage({Key key, this.title, this.firstLaunch}) : super(key: key);
   final String title;
+  final bool firstLaunch;
 
   @override
-  _ScanPageState createState() => _ScanPageState(key: key, title: title);
+  _ScanPageState createState() =>
+      _ScanPageState(key: key, title: title, firstLaunch: firstLaunch);
 }
 
 class _ScanPageState extends State<ScanPage> {
-  _ScanPageState({Key key, this.title});
+  _ScanPageState({Key key, this.title, this.firstLaunch});
   final String title;
+  bool firstLaunch;
   final Map<String, DateTime> contactedUsers = {};
   FlutterBlue flutterBlue = FlutterBlue.instance;
   bool isSwitched = false;
@@ -36,7 +38,9 @@ class _ScanPageState extends State<ScanPage> {
   Timer scanInv;
   Timer firebaseUpload;
   String blueOnOffStr = 'Start Scanning';
-  //StreamSubscription<String> popupStream;
+  int sessionId = 0;
+  // var popupCancel1;
+  // var popupCancel2;
   double currentLatitude;
   double currentLongitude;
 
@@ -69,58 +73,51 @@ class _ScanPageState extends State<ScanPage> {
   }
 
   void getData() async {
-    //String curruids = auth.FirebaseAuth.instance.currentUser.uid;
-    // var hexstr;
-    // var strr;
-    // var strrlst;
-    await FirebaseFirestore.instance
-        .collection('users')
-        .doc(auth.FirebaseAuth.instance.currentUser.uid)
-        .get()
-        .then((usrData) => {
-              myUserData = UserData.fromData(usrData.data()),
-              currUUID = hex.encode(myUserData.uuid.codeUnits),
-              //print(currUUID),
-
-              // print(hex.encode(myUserData.uuid.codeUnits)),
-
-              // hexstr = hex.encode(myUserData.uuid.codeUnits),
-              // strrlst = hex.decode(hexstr), //.map((char) => null),
-              // strr = String.fromCharCodes(strrlst),
-            });
+    // await FirebaseFirestore.instance
+    //     .collection('users')
+    //     .doc(auth.FirebaseAuth.instance.currentUser.uid)
+    //     .get()
+    //     .then((usrData) => {
+    //           myUserData = UserData.fromData(usrData.data()),
+    //           currUUID = hex.encode(myUserData.uuid.codeUnits),
+    //         });
   }
 
 //Local Notification Functions
 
 //popup notifcation
-  Future<void> popup() async {
+  Future<void> popup(int futureId) async {
+    if (sessionId != futureId) {
+      return;
+    }
     if (alertboxStatus == false) {
       alertboxStatus = true;
-      initializeNotification("String payload");
-      showDialog(
-        //User friendly error message when the screen has been displayed
-        context: context,
-        builder: (_) => AlertDialog(
-          title: Text(
-            "Close Contact Alert",
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 28),
-          ),
-          content: SingleChildScrollView(
-            scrollDirection: Axis.vertical,
-            child: ListBody(
-              mainAxis: Axis.vertical,
-              children: <Widget>[
-                Icon(Icons.warning_amber_rounded,
-                    color: Colors.red[300], size: 50),
-                Text(
-                    'Warning: Social Distance Violated!\nYou are at a distance of less than 2 metres from another person.'),
-              ],
-            ),
-          ),
-        ),
-        barrierDismissible: true,
-      ).then((_) => {alertboxStatus = false});
+      initializeNotification("String payload")
+          .then((value) => {alertboxStatus = false});
+      // showDialog(
+      //   //User friendly error message when the screen has been displayed
+      //   context: context,
+      //   builder: (_) => AlertDialog(
+      //     title: Text(
+      //       "Close Contact Alert",
+      //       textAlign: TextAlign.center,
+      //       style: TextStyle(fontSize: 28),
+      //     ),
+      //     content: SingleChildScrollView(
+      //       scrollDirection: Axis.vertical,
+      //       child: ListBody(
+      //         mainAxis: Axis.vertical,
+      //         children: <Widget>[
+      //           Icon(Icons.warning_amber_rounded,
+      //               color: Colors.red[300], size: 50),
+      //           Text(
+      //               'Warning: Social Distance Violated!\nYou are at a distance of less than 2 metres from another person.'),
+      //         ],
+      //       ),
+      //     ),
+      //   ),
+      //   barrierDismissible: true,
+      // ).then((_) => {alertboxStatus = false});
     }
     Vibration.vibrate(pattern: [500, 1000, 500, 2000]);
   }
@@ -138,13 +135,22 @@ class _ScanPageState extends State<ScanPage> {
   }
 
   Future<String> getUserData() async {
-    var userLocalData = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(auth.FirebaseAuth.instance.currentUser.uid)
-        .get();
+    if (firstLaunch) {
+      var userLocalData = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(auth.FirebaseAuth.instance.currentUser.uid)
+          .get();
 
-    savedLocalUsrData = UserDataLocal.fromData(userLocalData.data());
-    print(savedLocalUsrData.email);
+      savedLocalUsrData = UserDataLocal.fromData(userLocalData.data());
+
+      currUUID = hex.encode(savedLocalUsrData.uuid.codeUnits);
+      print(savedLocalUsrData.email);
+      setState(() {
+        firstLaunch = false;
+      });
+      print("LL");
+    }
+    print("RR");
     return "RR";
   }
 
@@ -167,14 +173,45 @@ class _ScanPageState extends State<ScanPage> {
                     padding: const EdgeInsets.all(8),
                     children: <Widget>[
                       Center(
-                        child: FlatButton(
-                          minWidth: 0.9 * MediaQuery.of(context).size.width,
-                          color: Colors.blue,
-                          textColor: Colors.white,
-                          disabledColor: Colors.grey,
-                          disabledTextColor: Colors.black,
-                          padding: EdgeInsets.all(8.0),
-                          splashColor: Colors.blueAccent,
+                        child: TextButton(
+                          style: TextButton.styleFrom(
+                            primary: Colors.white,
+                            backgroundColor: Colors.blue,
+                            onSurface: Colors.white,
+                          ),
+                          child: Container(
+                              width: 0.7 * MediaQuery.of(context).size.width,
+                              height: 28,
+                              child: Center(
+                                child: Text(
+                                  '$blueOnOffStr',
+                                  style: TextStyle(fontSize: 26),
+                                  //textScaleFactor: 1.0,
+                                ),
+                              )
+                              //padding: EdgeInsets.all(8.0)
+                              ),
+
+                          // Row(
+                          //     mainAxisAlignment: MainAxisAlignment.end,
+                          //     children: <Widget>[
+
+                          //       Padding(
+                          //         padding: const EdgeInsets.only(
+                          //             right: 9.5, top: 1.6),
+                          //         child: Icon(Icons.arrow_back,
+                          //             color: Colors.blue),
+                          //       ),
+                          //       Text(
+                          //           "$blueOnOffStr") //, style: Theme.of(context).textTheme.bodyText2.merge(TextStyle(color: Colors.blue))),
+                          //     ]),
+                          // minWidth: 0.9 * MediaQuery.of(context).size.width,
+                          // color: Colors.blue,
+                          // textColor: Colors.white,
+                          // disabledColor: Colors.grey,
+                          // disabledTextColor: Colors.black,
+                          // padding: EdgeInsets.all(8.0),
+                          // splashColor: Colors.blueAccent,
                           onPressed: () async {
                             bool serviceCheck =
                                     await Location().serviceEnabled(),
@@ -238,11 +275,14 @@ class _ScanPageState extends State<ScanPage> {
                                         contactedUsers[contactUuid] =
                                             DateTime.now();
                                       }
-                                      if (isSwitched) {
-                                        await popup();
-                                      }
-                                      alertboxStatus = true;
-                                      //print('uuid: $scanUuid');
+                                      // popupCancel1 = CancelableOperation
+                                      //         .fromFuture(popup(sessionId))
+                                      //     .then((_) => );
+                                      popup(sessionId)
+                                          .then((_) => {alertboxStatus = true});
+                                      // await popup().then((_) => {
+                                      //       alertboxStatus = true,
+                                      //     });
                                     }
                                   }
                                 }
@@ -304,16 +344,19 @@ class _ScanPageState extends State<ScanPage> {
                                                   contactedUsers[contactUuid] =
                                                       DateTime.now();
                                                 }
-                                                // popupStream = getData()
-                                                //     .asStream()
-                                                //     .listen((_) {
-                                                //   popup().then((_) =>
-                                                //       {alertboxStatus = true});
-                                                // });
-                                                if (isSwitched) {
-                                                  await popup();
-                                                }
-                                                alertboxStatus = true;
+                                                // await popup().then((_) => {
+                                                //       alertboxStatus = true,
+                                                //     });
+                                                // popupCancel2 =
+                                                //     CancelableOperation
+                                                //             .fromFuture(popup(
+                                                //                 sessionId))
+                                                //         .then((_) => {
+                                                //               alertboxStatus =
+                                                //                   true
+                                                //             });
+                                                popup(sessionId).then((_) =>
+                                                    {alertboxStatus = true});
                                               }
                                               // print(
                                               //     '${r.device} found! rssi: ${r.rssi},key: ${r.advertisementData.manufacturerData.keys},adv_data: ${r.advertisementData.manufacturerData.values.toList()[0]},');
@@ -333,8 +376,8 @@ class _ScanPageState extends State<ScanPage> {
                                           await FirebaseFirestore.instance
                                               .collection('userCloseContact')
                                               .add({
-                                            'uuid1': myUserData.uuid,
-                                            'name': myUserData.name,
+                                            'uuid1': savedLocalUsrData.uuid,
+                                            'name': savedLocalUsrData.name,
                                             'uuid2': key,
                                             'timestamp': Timestamp
                                                 .fromMillisecondsSinceEpoch(value
@@ -351,22 +394,33 @@ class _ScanPageState extends State<ScanPage> {
                               //     'Off_Status: ${await beaconBroadcast.isAdvertising()},${scanInv.isActive},$isSwitched');
                               if (await beaconBroadcast.isAdvertising()) {
                                 beaconBroadcast.stop();
+                                print("stop");
                               }
+                              // if (!popupCancel2.isCompleted) {
+                              //   popupCancel2.cancel();
+                              // }
+                              // if (!popupCancel1.isCompleted) {
+                              //   popupCancel1.cancel();
+                              // }
                               if (scanInv.isActive) {
                                 scanInv.cancel();
+                              }
+                              if (await flutterBlue.isOn) {
+                                flutterBlue.stopScan();
                               }
                               if (firebaseUpload.isActive) {
                                 firebaseUpload.cancel();
                               }
                               alertboxStatus = false;
                               strtText();
+                              sessionId = sessionId + 1;
                               return null;
                             }
                           },
-                          child: Text(
-                            '$blueOnOffStr',
-                            style: TextStyle(fontSize: 20.0),
-                          ),
+                          // child: Text(
+                          //   '$blueOnOffStr',
+                          //   style: TextStyle(fontSize: 20.0),
+                          // ),
                         ),
                       ),
                       SizedBox(

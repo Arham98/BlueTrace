@@ -48,6 +48,7 @@ class MyApp extends StatelessWidget {
           ),
           home: ScanPage(
             title: "Bluetooth Tracing",
+            firstLaunch: true,
           ),
         ),
       );
