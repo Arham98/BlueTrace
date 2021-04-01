@@ -96,7 +96,7 @@ class _CovidPageState extends State<CovidPage> {
                 .millisecondsSinceEpoch
                 //)
                 .toString(),
-        'token': savedLocalUsrData.name,
+        'user': savedLocalUsrData.name,
         'uuid': savedLocalUsrData.uuid,
       }),
     );
