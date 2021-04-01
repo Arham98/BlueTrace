@@ -39,7 +39,7 @@ Future sendToken(String title) async {
       'uuid': currUUID,
     }),
   );
-  print("RESPONSE: ${response.body}");
+  print("RESPONSE:${response.statusCode} L ${response.body} L");
 }
 
 Future selectNotification(String payload) async {
