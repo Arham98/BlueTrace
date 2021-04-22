@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:flutter/material.dart';
 import 'package:blue_trace/Scanner.dart';
+import 'package:blue_trace/covid.dart';
 import 'package:blue_trace/login.dart';
 import 'package:blue_trace/auth.dart';
 import 'package:blue_trace/notification.dart';
@@ -46,7 +47,8 @@ class MyApp extends StatelessWidget {
             primarySwatch: Colors.blue,
             visualDensity: VisualDensity.adaptivePlatformDensity,
           ),
-          home: ScanPage(
+          home: //CovidPage(),
+              ScanPage(
             title: "Bluetooth Tracing",
             firstLaunch: true,
           ),

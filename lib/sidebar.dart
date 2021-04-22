@@ -1,4 +1,4 @@
-import 'dart:ffi';
+//import 'dart:ffi';
 
 import 'package:blue_trace/maps.dart';
 import 'package:blue_trace/user.dart';
@@ -7,7 +7,7 @@ import 'package:blue_trace/covid.dart';
 // import 'package:blue_trace/Scanner.dart' as scannerpgdata;
 import 'package:flutter/material.dart';
 import 'package:blue_trace/login.dart';
-import 'package:firebase_auth/firebase_auth.dart' as auth;
+//import 'package:firebase_auth/firebase_auth.dart' as auth;
 
 class SideBar extends StatefulWidget {
   SideBar({Key key, this.covidbool});
@@ -77,9 +77,16 @@ class SideBarProperties extends State<SideBar> {
         padding: EdgeInsets.zero,
         children: <Widget>[
           DrawerHeader(
-            child: Text(
-              savedLocalUsrData.name,
-              style: TextStyle(color: Colors.white, fontSize: 25),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                googleImage,
+                Padding(padding: EdgeInsets.all(10)),
+                Text(
+                  savedLocalUsrData.name,
+                  style: TextStyle(color: Colors.white, fontSize: 25),
+                ),
+              ],
             ),
             decoration: BoxDecoration(
               color: Colors.blue,
@@ -88,17 +95,27 @@ class SideBarProperties extends State<SideBar> {
               //     image: AssetImage('assets/images/cover.jpg'))
             ),
           ),
+          // ListTile(
+          //   leading: Icon(Icons.verified_user),
+          //   title: Text('Profile'),
+          //   onTap: () => {Navigator.of(context).pop()},
+          // ),
           ListTile(
-            leading: Icon(Icons.verified_user),
-            title: Text('Profile'),
-            onTap: () => {Navigator.of(context).pop()},
+            leading: Icon(Icons.coronavirus_outlined),
+            title: Text('Update Covid Status'),
+            onTap: () => {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => CovidPage()),
+              )
+            },
           ),
-          LabeledCheckbox(
-            label: 'I tested Covid-Positive ${savedLocalUsrData.covidStatus}',
-            padding: const EdgeInsets.symmetric(horizontal: 20.0),
-            value: savedLocalUsrData.covidStatus,
-            onChanged: null,
-          ),
+          // LabeledCheckbox(
+          //   label: 'Update Covid Status',
+          //   padding: const EdgeInsets.symmetric(horizontal: 20.0),
+          //   value: savedLocalUsrData.covidStatus,
+          //   onChanged: null,
+          // ),
           ListTile(
             leading: Icon(Icons.location_pin),
             title: Text('Trace Map'),
@@ -110,7 +127,7 @@ class SideBarProperties extends State<SideBar> {
             },
           ),
           ListTile(
-            leading: Icon(Icons.border_color),
+            leading: Icon(Icons.help),
             title: Text('Help'),
             onTap: () => {
               Navigator.of(context).pop(),
@@ -118,7 +135,7 @@ class SideBarProperties extends State<SideBar> {
             },
           ),
           ListTile(
-            leading: Icon(Icons.border_color),
+            leading: Icon(Icons.business_center),
             title: Text('Terms & Conditions'),
             onTap: () => {
               Navigator.of(context).pop(),

@@ -8,7 +8,7 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:blue_trace/notification.dart' as notification;
-import 'package:cloud_firestore/cloud_firestore.dart';
+//import 'package:cloud_firestore/cloud_firestore.dart';
 
 class CovidPage extends StatefulWidget {
   CovidPage({
@@ -100,7 +100,12 @@ class _CovidPageState extends State<CovidPage> {
         'uuid': savedLocalUsrData.uuid,
       }),
     );
-    print(response);
+    print("COVID response: ${response.statusCode}\n ${response.body} ");
+    setState(() {
+      submissionMsg =
+          "Your Request has been Submitted for Approval, If you want you can send another request.";
+    });
+
     return;
   }
 
@@ -115,6 +120,10 @@ class _CovidPageState extends State<CovidPage> {
         covidbool: false,
       ),
       appBar: AppBar(
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_ios, color: Colors.white),
+          onPressed: () => {Navigator.of(context).pop()},
+        ),
         title: Text("COVID Status"),
       ),
       body: Center(
@@ -181,11 +190,11 @@ class _CovidPageState extends State<CovidPage> {
                                             "Your Request is been Processed.";
                                       });
 
-                                      await sendCovidAlert()
-                                          .whenComplete(() => {
-                                                submissionMsg =
-                                                    "Your Request has been Submitted for Approval, If you want you can send another request.",
-                                              });
+                                      await sendCovidAlert();
+                                      // .then(() => {
+                                      //       submissionMsg =
+                                      //           "Your Request has been Submitted for Approval, If you want you can send another request.",
+                                      //     });
                                     },
                                   ),
                                   Padding(padding: EdgeInsets.all(8)),

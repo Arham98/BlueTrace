@@ -55,3 +55,4 @@ class UserDataLocal {
 }
 
 UserDataLocal savedLocalUsrData;
+Widget googleImage;

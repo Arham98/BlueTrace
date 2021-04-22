@@ -8,14 +8,14 @@ import 'package:vibration/vibration.dart';
 //import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:blue_trace/sidebar.dart';
 import 'package:blue_trace/user.dart';
-import 'package:blue_trace/Mapper.dart';
+//import 'package:blue_trace/Mapper.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:blue_trace/notification.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:location/location.dart';
 import 'dart:math' as math;
-import 'package:async/async.dart';
+//import 'package:async/async.dart';
 
 class ScanPage extends StatefulWidget {
   ScanPage({Key key, this.title, this.firstLaunch}) : super(key: key);
@@ -39,17 +39,20 @@ class _ScanPageState extends State<ScanPage> {
   Timer firebaseUpload;
   String blueOnOffStr = 'Start Scanning';
   int sessionId = 0;
+  int resCount = 0;
   // var popupCancel1;
   // var popupCancel2;
   double currentLatitude;
   double currentLongitude;
+  bool sidebarActivation = false;
+  int noiseLevel = 2;
 
   //var initializationSettings;
   //print(_us);_userData
   static var currUUID;
   static const MAJOR_ID = 1;
   static const MINOR_ID = 1;
-  static const TRANSMISSION_POWER = 3;
+  static const TRANSMISSION_POWER = -59;
   static const LAYOUT =
       'm:2-3=beac,i:4-19,i:20-21,i:22-23,p:24-24,d:25-25'; //BeaconBroadcast.ALTBEACON_LAYOUT;
 
@@ -82,8 +85,6 @@ class _ScanPageState extends State<ScanPage> {
     //           currUUID = hex.encode(myUserData.uuid.codeUnits),
     //         });
   }
-
-//Local Notification Functions
 
 //popup notifcation
   Future<void> popup(int futureId) async {
@@ -134,6 +135,11 @@ class _ScanPageState extends State<ScanPage> {
     });
   }
 
+  Future<String> sideBarWait() async {
+    while (!sidebarActivation) {}
+    return 'loading complete';
+  }
+
   Future<String> getUserData() async {
     if (firstLaunch) {
       var userLocalData = await FirebaseFirestore.instance
@@ -142,6 +148,26 @@ class _ScanPageState extends State<ScanPage> {
           .get();
 
       savedLocalUsrData = UserDataLocal.fromData(userLocalData.data());
+      if (auth.FirebaseAuth.instance.currentUser.photoURL != null) {
+        googleImage = Container(
+            width: 80.0,
+            height: 80.0,
+            decoration: new BoxDecoration(
+                shape: BoxShape.circle,
+                image: new DecorationImage(
+                    fit: BoxFit.fill,
+                    image: new NetworkImage(
+                        auth.FirebaseAuth.instance.currentUser.photoURL))));
+      } else {
+        googleImage = Container(
+          width: 80.0,
+          height: 80.0,
+          child: Icon(
+            Icons.account_circle,
+            size: 100,
+          ),
+        );
+      }
 
       currUUID = hex.encode(savedLocalUsrData.uuid.codeUnits);
       print(savedLocalUsrData.email);
@@ -160,6 +186,26 @@ class _ScanPageState extends State<ScanPage> {
       endDrawer: SideBar(
         covidbool: false,
       ),
+      // FutureBuilder(
+      //     future: sideBarWait(),
+      //     builder: (context, snapshot) {
+      //       if (snapshot.hasData) {
+      //         SideBar(
+      //           covidbool: false,
+      //         );
+      //       }
+      //       return Container(
+      //         width: 10,
+      //         height: 10,
+      //       );
+      //     }),
+
+      // (sidebarActivation)
+      //  SideBar(
+      //     covidbool: false,
+      //   )
+      //     : null,
+
       appBar: AppBar(
         title: Text(title),
       ),
@@ -168,6 +214,10 @@ class _ScanPageState extends State<ScanPage> {
               future: getUserData(),
               builder: (context, snapshot) {
                 if (snapshot.hasData) {
+                  //setState(() {
+                  sidebarActivation = true;
+                  //});
+
                   return new ListView(
                     shrinkWrap: true,
                     padding: const EdgeInsets.all(8),
@@ -181,7 +231,9 @@ class _ScanPageState extends State<ScanPage> {
                           ),
                           child: Container(
                               width: 0.7 * MediaQuery.of(context).size.width,
-                              height: 28,
+                              height: 28 +
+                                  0.05 *
+                                      MediaQuery.of(context).size.height, //28,
                               child: Center(
                                 child: Text(
                                   '$blueOnOffStr',
@@ -249,40 +301,65 @@ class _ScanPageState extends State<ScanPage> {
                               );
                               flutterBlue.scanResults.listen((results) async {
                                 // do something with scan results
+                                resCount = results.length;
+                                if (resCount <= 5) {
+                                  noiseLevel = 2;
+                                } else if (resCount > 5 && resCount <= 10) {
+                                  noiseLevel = 3;
+                                } else {
+                                  noiseLevel = 4;
+                                }
                                 for (ScanResult r in results) {
                                   int myUniqueKey = 5636; //5636;
                                   if (r.advertisementData.manufacturerData
                                       .containsKey(myUniqueKey)) {
-                                    var scanUuid = hex.encode(r
-                                        .advertisementData
-                                        .manufacturerData
-                                        .values
-                                        .toList()[0]
-                                        .sublist(2, 18));
-                                    var contactUuid = String.fromCharCodes(r
-                                        .advertisementData
-                                        .manufacturerData
-                                        .values
-                                        .toList()[0]
-                                        .sublist(2, 18));
-                                    print("$scanUuid, $currUUID");
-                                    if (scanUuid != currUUID) {
-                                      if (contactedUsers
-                                          .containsKey(contactUuid)) {
-                                        contactedUsers.update(contactUuid,
-                                            (value) => DateTime.now());
-                                      } else {
-                                        contactedUsers[contactUuid] =
-                                            DateTime.now();
+                                    double deviceDistance = math.pow(
+                                        10,
+                                        (r.rssi - TRANSMISSION_POWER) /
+                                            (10 * noiseLevel));
+                                    print(deviceDistance);
+                                    if (deviceDistance < 2.0 && false) {
+                                      if (locationEnabled) {
+                                        LocationData locationData =
+                                            await Location().getLocation();
+                                        currentLatitude =
+                                            locationData.latitude /
+                                                (180 / math.pi);
+                                        currentLongitude =
+                                            locationData.longitude /
+                                                (180 / math.pi);
                                       }
-                                      // popupCancel1 = CancelableOperation
-                                      //         .fromFuture(popup(sessionId))
-                                      //     .then((_) => );
-                                      popup(sessionId)
-                                          .then((_) => {alertboxStatus = true});
-                                      // await popup().then((_) => {
-                                      //       alertboxStatus = true,
-                                      //     });
+                                      var scanUuid = hex.encode(r
+                                          .advertisementData
+                                          .manufacturerData
+                                          .values
+                                          .toList()[0]
+                                          .sublist(2, 18));
+                                      var contactUuid = String.fromCharCodes(r
+                                          .advertisementData
+                                          .manufacturerData
+                                          .values
+                                          .toList()[0]
+                                          .sublist(2, 18));
+                                      print("$scanUuid, $currUUID");
+                                      if (scanUuid != currUUID) {
+                                        if (contactedUsers
+                                            .containsKey(contactUuid)) {
+                                          contactedUsers.update(contactUuid,
+                                              (value) => DateTime.now());
+                                        } else {
+                                          contactedUsers[contactUuid] =
+                                              DateTime.now();
+                                        }
+                                        // popupCancel1 = CancelableOperation
+                                        //         .fromFuture(popup(sessionId))
+                                        //     .then((_) => );
+                                        popup(sessionId).then(
+                                            (_) => {alertboxStatus = true});
+                                        // await popup().then((_) => {
+                                        //       alertboxStatus = true,
+                                        //     });
+                                      }
                                     }
                                   }
                                 }
@@ -303,63 +380,72 @@ class _ScanPageState extends State<ScanPage> {
                                         flutterBlue.scanResults
                                             .listen((results) async {
                                           // do something with scan results
+                                          resCount = results.length;
+                                          if (resCount <= 5) {
+                                            noiseLevel = 2;
+                                          } else if (resCount > 5 &&
+                                              resCount <= 10) {
+                                            noiseLevel = 3;
+                                          } else {
+                                            noiseLevel = 4;
+                                          }
                                           for (ScanResult r in results) {
                                             int myUniqueKey = 5636; //5636;
                                             if (r.advertisementData
                                                 .manufacturerData
                                                 .containsKey(myUniqueKey)) {
-                                              if (locationEnabled) {
-                                                LocationData locationData =
-                                                    await Location()
-                                                        .getLocation();
-                                                currentLatitude =
-                                                    locationData.latitude /
-                                                        (180 / math.pi);
-                                                currentLongitude =
-                                                    locationData.longitude /
-                                                        (180 / math.pi);
-                                              }
-                                              print("$myUniqueKey");
-                                              var scanUuid = hex.encode(r
-                                                  .advertisementData
-                                                  .manufacturerData
-                                                  .values
-                                                  .toList()[0]
-                                                  .sublist(2, 18));
-                                              var contactUuid =
-                                                  String.fromCharCodes(r
-                                                      .advertisementData
-                                                      .manufacturerData
-                                                      .values
-                                                      .toList()[0]
-                                                      .sublist(2, 18));
-                                              if (scanUuid != currUUID) {
-                                                if (contactedUsers
-                                                    .containsKey(contactUuid)) {
-                                                  contactedUsers.update(
-                                                      contactUuid,
-                                                      (value) =>
-                                                          DateTime.now());
-                                                } else {
-                                                  contactedUsers[contactUuid] =
-                                                      DateTime.now();
+                                              double deviceDistance = math.pow(
+                                                  10,
+                                                  (r.rssi -
+                                                          TRANSMISSION_POWER) /
+                                                      (10 * noiseLevel));
+                                              print(deviceDistance);
+                                              if (deviceDistance < 2.0 &&
+                                                  false) {
+                                                if (locationEnabled) {
+                                                  LocationData locationData =
+                                                      await Location()
+                                                          .getLocation();
+                                                  currentLatitude =
+                                                      locationData.latitude /
+                                                          (180 / math.pi);
+                                                  currentLongitude =
+                                                      locationData.longitude /
+                                                          (180 / math.pi);
                                                 }
-                                                // await popup().then((_) => {
-                                                //       alertboxStatus = true,
-                                                //     });
-                                                // popupCancel2 =
-                                                //     CancelableOperation
-                                                //             .fromFuture(popup(
-                                                //                 sessionId))
-                                                //         .then((_) => {
-                                                //               alertboxStatus =
-                                                //                   true
-                                                //             });
-                                                popup(sessionId).then((_) =>
-                                                    {alertboxStatus = true});
+                                                print("$myUniqueKey");
+                                                var scanUuid = hex.encode(r
+                                                    .advertisementData
+                                                    .manufacturerData
+                                                    .values
+                                                    .toList()[0]
+                                                    .sublist(2, 18));
+                                                var contactUuid =
+                                                    String.fromCharCodes(r
+                                                        .advertisementData
+                                                        .manufacturerData
+                                                        .values
+                                                        .toList()[0]
+                                                        .sublist(2, 18));
+                                                if (scanUuid != currUUID) {
+                                                  if (contactedUsers
+                                                      .containsKey(
+                                                          contactUuid)) {
+                                                    contactedUsers.update(
+                                                        contactUuid,
+                                                        (value) =>
+                                                            DateTime.now());
+                                                  } else {
+                                                    contactedUsers[
+                                                            contactUuid] =
+                                                        DateTime.now();
+                                                  }
+                                                  popup(sessionId).then((_) =>
+                                                      {alertboxStatus = true});
+                                                }
+                                                // print(
+                                                //     '${r.device} found! rssi: ${r.rssi},key: ${r.advertisementData.manufacturerData.keys},adv_data: ${r.advertisementData.manufacturerData.values.toList()[0]},');
                                               }
-                                              // print(
-                                              //     '${r.device} found! rssi: ${r.rssi},key: ${r.advertisementData.manufacturerData.keys},adv_data: ${r.advertisementData.manufacturerData.values.toList()[0]},');
                                             }
                                           }
                                         }).onDone(() {
@@ -437,13 +523,6 @@ class _ScanPageState extends State<ScanPage> {
                   size: 75.0,
                 );
               })),
-      // floatingActionButton: FloatingActionButton(
-      //   onPressed: () async {
-      //     print("POPOPPOPOP");
-      //   },
-      //   child: Icon(Icons.navigation),
-      //   backgroundColor: Colors.green,
-      // ),
     );
   }
 }

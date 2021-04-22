@@ -99,16 +99,16 @@ class LoginScreenState extends State<LoginScreen> {
                               ))),
                           onTap: () async {
                             await authService.googleSignIn().then((_) async {
-                              ScaffoldMessenger.of(context)
-                                  .showSnackBar(new SnackBar(
-                                //duration: new Duration(seconds: 4),
-                                content: new Row(
-                                  children: <Widget>[
-                                    new CircularProgressIndicator(),
-                                    new Text("  Signing-In...")
-                                  ],
-                                ),
-                              ));
+                              // ScaffoldMessenger.of(context)
+                              //     .showSnackBar(new SnackBar(
+                              //   //duration: new Duration(seconds: 4),
+                              //   content: new Row(
+                              //     children: <Widget>[
+                              //       new CircularProgressIndicator(),
+                              //       new Text("  Signing-In...")
+                              //     ],
+                              //   ),
+                              // ));
                               var googleUid =
                                   auth.FirebaseAuth.instance.currentUser.uid;
                               await FirebaseFirestore.instance
