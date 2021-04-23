@@ -4,6 +4,7 @@ import 'package:blue_trace/Scanner.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:blue_trace/auth.dart';
 import 'package:firebase_auth/firebase_auth.dart' as auth;
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter/material.dart';
 import 'package:random_string/random_string.dart';
 
@@ -193,6 +194,7 @@ class LogoutButton extends StatelessWidget {
                     return LoginScreen();
                   },
                 ));
+                await GoogleSignIn().disconnect();
                 await Future.delayed(Duration(seconds: 1), () {
                   authService.signOut().then((dynamic) {
                     print("Successful Logout");
