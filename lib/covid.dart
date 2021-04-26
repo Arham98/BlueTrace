@@ -6,6 +6,8 @@ import 'package:blue_trace/sidebar.dart';
 import 'package:blue_trace/user.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:http/http.dart' as http;
+import 'package:firebase_auth/firebase_auth.dart' as auth;
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:convert';
 import 'package:blue_trace/notification.dart' as notification;
 //import 'package:cloud_firestore/cloud_firestore.dart';
@@ -100,6 +102,18 @@ class _CovidPageState extends State<CovidPage> {
         'uuid': savedLocalUsrData.uuid,
       }),
     );
+    await FirebaseFirestore.instance.collection('covidPositive').add({
+      'timestamp': Timestamp.fromMillisecondsSinceEpoch(
+          DateTime.now().millisecondsSinceEpoch),
+      'user': savedLocalUsrData.name,
+      'uuid': savedLocalUsrData.uuid,
+    });
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(auth.FirebaseAuth.instance.currentUser.uid)
+        .set({
+      'covidStatus': true,
+    }, SetOptions(merge: true));
     print("COVID response: ${response.statusCode}\n ${response.body} ");
     setState(() {
       submissionMsg =

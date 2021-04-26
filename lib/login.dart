@@ -7,6 +7,7 @@ import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter/material.dart';
 import 'package:random_string/random_string.dart';
+//import 'package:firebase_auth_platform_interface/firebase_auth_platform_interface.dart';
 
 class LoginScreen extends StatefulWidget {
   LoginScreenState createState() => LoginScreenState();
@@ -99,7 +100,20 @@ class LoginScreenState extends State<LoginScreen> {
                                 ],
                               ))),
                           onTap: () async {
-                            await authService.googleSignIn().then((_) async {
+                            GoogleSignInAccount googleUser =
+                                await GoogleSignIn().signIn();
+                            GoogleSignInAuthentication googleAuth =
+                                await googleUser.authentication;
+
+                            final cred = auth.GoogleAuthProvider.credential(
+                                idToken: googleAuth.idToken,
+                                accessToken: googleAuth.accessToken);
+
+                            //await authService.googleSignIn()
+
+                            await auth.FirebaseAuth.instance
+                                .signInWithCredential(cred)
+                                .then((_) async {
                               // ScaffoldMessenger.of(context)
                               //     .showSnackBar(new SnackBar(
                               //   //duration: new Duration(seconds: 4),
@@ -194,14 +208,18 @@ class LogoutButton extends StatelessWidget {
                     return LoginScreen();
                   },
                 ));
-                await GoogleSignIn().disconnect();
+                await Future.delayed(Duration(seconds: 1), () {
+                  GoogleSignIn().disconnect();
+                });
                 await Future.delayed(Duration(seconds: 1), () {
                   authService.signOut().then((dynamic) {
                     print("Successful Logout");
                   }).catchError((e, s) {
-                    print(e);
-                    print(s);
+                    print("error: $e");
+                    print("s error: $s");
                   });
+                  GoogleSignIn _googleSignIn = GoogleSignIn();
+                  _googleSignIn.signOut();
                 });
               });
         });
