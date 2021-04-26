@@ -26,51 +26,6 @@ class _CovidPageState extends State<CovidPage> {
 
   String submissionMsg = "";
 
-//CODE FOR COVID ALERT  directly to Firebase - Now to be done through Server//
-  // (bool newValue) async {
-  //   //print("$covidbool,$newValue");
-  //   if (newValue == true) {
-  //     await FirebaseFirestore.instance
-  //         .collection('covidPositive')
-  //         .add({
-  //       'uuid': curruuid,
-  //       'timestamp': Timestamp.fromMillisecondsSinceEpoch(
-  //           DateTime.now().millisecondsSinceEpoch),
-  //       'user': username,
-  //     });
-  //     await FirebaseFirestore.instance
-  //         .collection('users')
-  //         .doc(auth.FirebaseAuth.instance.currentUser.uid)
-  //         .set({
-  //       'covidStatus': true,
-  //     }, SetOptions(merge: true));
-  //     //await WebAppServices.sendCovidSignal(
-  //     //    scannerpgdata.myUserData.uuid);
-  //   } else {
-  //     await FirebaseFirestore.instance
-  //         .collection('users')
-  //         .doc(auth.FirebaseAuth.instance.currentUser.uid)
-  //         .set({
-  //       'covidStatus': false,
-  //     }, SetOptions(merge: true));
-  //     var docid;
-  //     await FirebaseFirestore.instance
-  //         .collection('covidPositive')
-  //         .where('uuid', isEqualTo: savedLocalUsrData.uuid)
-  //         .get()
-  //         .then((value) => {docid = value.docs.first.id});
-  //     await FirebaseFirestore.instance
-  //         .collection('covidPositive')
-  //         .doc(docid)
-  //         .delete();
-  //   }
-  //   setState(() {
-  //     savedLocalUsrData.covidStatus = newValue;
-  //     covidbool = newValue;
-  //   });
-  // },
-//          END       //
-
   @override
   void initState() {
     super.initState();
@@ -83,25 +38,27 @@ class _CovidPageState extends State<CovidPage> {
   void getData() async {}
 
   Future sendCovidAlert() async {
-    final response = await http.post(
-      Uri.https(
-        notification.ROOT,
-        '',
-      ),
-      headers: <String, String>{
-        'Content-Type': 'application/json; charset=UTF-8',
-      },
-      body: jsonEncode(<String, String>{
-        'callType': "updated_covid_pos",
-        'timestamp': //Timestamp.fromMillisecondsSinceEpoch(
-            DateTime.now()
-                .millisecondsSinceEpoch
-                //)
-                .toString(),
-        'user': savedLocalUsrData.name,
-        'uuid': savedLocalUsrData.uuid,
-      }),
-    );
+    // final response = await http.post(
+    //   Uri.https(
+    //     notification.ROOT,
+    //     '',
+    //   ),
+    //   headers: <String, String>{
+    //     'Content-Type': 'application/json; charset=UTF-8',
+    //   },
+    //   body: jsonEncode(<String, String>{
+    //     'callType': "updated_covid_pos",
+    //     'timestamp': //Timestamp.fromMillisecondsSinceEpoch(
+    //         DateTime.now()
+    //             .millisecondsSinceEpoch
+    //             //)
+    //             .toString(),
+    //     'user': savedLocalUsrData.name,
+    //     'uuid': savedLocalUsrData.uuid,
+    //   }),
+    // );
+    //print("COVID response: ${response.statusCode}\n ${response.body} ");
+
     await FirebaseFirestore.instance.collection('covidPositive').add({
       'timestamp': Timestamp.fromMillisecondsSinceEpoch(
           DateTime.now().millisecondsSinceEpoch),
@@ -114,7 +71,7 @@ class _CovidPageState extends State<CovidPage> {
         .set({
       'covidStatus': true,
     }, SetOptions(merge: true));
-    print("COVID response: ${response.statusCode}\n ${response.body} ");
+
     setState(() {
       submissionMsg =
           "Your Request has been Submitted for Approval, If you want you can send another request.";
