@@ -315,10 +315,11 @@ class _ScanPageState extends State<ScanPage> {
                                       .containsKey(myUniqueKey)) {
                                     double deviceDistance = math.pow(
                                         10,
-                                        (r.rssi - TRANSMISSION_POWER) /
+                                        -(r.rssi - TRANSMISSION_POWER) /
                                             (10 * noiseLevel));
-                                    print(deviceDistance);
-                                    if (deviceDistance < 2.0 && false) {
+                                    print(
+                                        "===> $deviceDistance, ${r.rssi}, $TRANSMISSION_POWER, $noiseLevel");
+                                    if (deviceDistance < 2.0) {
                                       if (locationEnabled) {
                                         LocationData locationData =
                                             await Location().getLocation();
@@ -396,12 +397,11 @@ class _ScanPageState extends State<ScanPage> {
                                                 .containsKey(myUniqueKey)) {
                                               double deviceDistance = math.pow(
                                                   10,
-                                                  (r.rssi -
+                                                  -(r.rssi -
                                                           TRANSMISSION_POWER) /
                                                       (10 * noiseLevel));
                                               print(deviceDistance);
-                                              if (deviceDistance < 2.0 &&
-                                                  false) {
+                                              if (deviceDistance < 2.0) {
                                                 if (locationEnabled) {
                                                   LocationData locationData =
                                                       await Location()

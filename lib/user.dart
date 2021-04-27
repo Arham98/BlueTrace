@@ -56,3 +56,10 @@ class UserDataLocal {
 
 UserDataLocal savedLocalUsrData;
 Widget googleImage;
+
+class UserLocData {
+  double lat;
+  double lon;
+
+  UserLocData({this.lat, this.lon});
+}

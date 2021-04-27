@@ -75,6 +75,7 @@ class _CovidPageState extends State<CovidPage> {
     setState(() {
       submissionMsg =
           "Your Request has been Submitted for Approval, If you want you can send another request.";
+      savedLocalUsrData.covidStatus = true;
     });
 
     return;

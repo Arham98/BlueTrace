@@ -7,6 +7,7 @@ import 'package:blue_trace/covid.dart';
 // import 'package:blue_trace/Scanner.dart' as scannerpgdata;
 import 'package:flutter/material.dart';
 import 'package:blue_trace/login.dart';
+import 'package:blue_trace/main.dart';
 //import 'package:firebase_auth/firebase_auth.dart' as auth;
 
 class SideBar extends StatefulWidget {
@@ -122,7 +123,12 @@ class SideBarProperties extends State<SideBar> {
             onTap: () => {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => Maps()),
+                MaterialPageRoute(
+                    builder: (context) => Maps(
+                          type: "specific",
+                          lat: locDataUsr.lat,
+                          lon: locDataUsr.lon,
+                        )),
               ),
             },
           ),
